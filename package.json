@@ -1,9 +1,11 @@
 {
   "name": "react-router-split",
+  "homepage": "https://liaooliver.github.io/react-router-split/",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "react-router build",
+    "deploy": "gh-pages -d build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
@@ -40,6 +42,7 @@
     "@types/node": "^20",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
+    "gh-pages": "^6.3.0",
     "react-router-devtools": "^1.1.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.2",
