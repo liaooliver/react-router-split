@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
@@ -11,5 +14,146 @@ body {
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem; /* 保持圓角不變 */
+  
+  /* 背景與前景 */
+  --background: #000000; /* 黑色底，沉浸式活潑背景 */
+  --foreground: #FFFFFF; /* 白色文字，乾淨對比 */
+  
+  /* 卡片 */
+  --card: #FFFFFF; /* 白色卡片，跟登入頁一致 */
+  --card-foreground: #000000; /* 卡片內文字用黑色，清晰可讀 */
+  
+  /* 彈窗 */
+  --popover: #FFFFFF; /* 彈窗也用白色，跟卡片一致 */
+  --popover-foreground: #000000; /* 彈窗文字黑色 */
+  
+  /* 主色 */
+  --primary: #FF5733; /* 鮮橘色，主按鈕、連結 */
+  --primary-foreground: #FFFFFF; /* 主色搭配白色文字 */
+  
+  /* 次色 */
+  --secondary: #00C4CC; /* 青藍色，輔助元素 */
+  --secondary-foreground: #FFFFFF; /* 次色用白色文字 */
+  
+  /* 柔和色 */
+  --muted: #F3F4F6; /* 淺灰，次要背景 */
+  --muted-foreground: #6B7280; /* 灰色，次要文字 */
+  
+  /* 點綴色 */
+  --accent: #FFC107; /* 鮮黃色，hover 或圖標 */
+  --accent-foreground: #000000; /* 點綴色用黑色文字 */
+  
+  /* 警示色 */
+  --destructive: #DC2626; /* 紅色，錯誤或刪除 */
+  --destructive-foreground: #FFFFFF; /* 警示用白色文字 */
+  
+  /* 邊框與輸入框 */
+  --border: #D1D5DB; /* 淺灰邊框，跟登入頁一致 */
+  --input: #D1D5DB; /* 輸入框邊框 */
+  
+  /* 聚焦環 */
+  --ring: #00C4CC; /* 青藍色，聚焦效果 */
+  
+  /* 圖表色 */
+  --chart-1: #FF5733; /* 鮮橘色 */
+  --chart-2: #FFC107; /* 鮮黃色 */
+  --chart-3: #00C4CC; /* 青藍色 */
+  --chart-4: #FBBF24; /* 淺黃，擴展色 */
+  --chart-5: #0891B2; /* 深藍，擴展色 */
+  
+  /* 側邊欄 */
+  --sidebar: #FFFFFF; /* 白色側邊欄 */
+  --sidebar-foreground: #000000; /* 黑色文字 */
+  --sidebar-primary: #FF5733; /* 鮮橘色 */
+  --sidebar-primary-foreground: #FFFFFF; /* 白色文字 */
+  --sidebar-accent: #FFC107; /* 鮮黃色 */
+  --sidebar-accent-foreground: #000000; /* 黑色文字 */
+  --sidebar-border: #D1D5DB; /* 淺灰邊框 */
+  --sidebar-ring: #00C4CC; /* 青藍色聚焦 */
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
