@@ -152,6 +152,7 @@ const DebtOverview = ({ debts, onMarkPaid }: DebtOverviewProps) => {
               type="button"
               variant="secondary"
               onClick={() => setConfirmDialog({ isOpen: false, debtId: null })}
+              className="w-20 h-10 border-[#D1D5DB] rounded-md bg-muted text-muted-foreground hover:bg-muted/90"
             >
               取消
             </Button>

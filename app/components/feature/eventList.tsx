@@ -1,6 +1,13 @@
 import { Link } from "react-router";
-import { Card, CardContent } from "~/components/ui/card";
-import StatusBadge from "~/components/feature/statusBadge";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "~/components/ui/card";
+import { CalendarIcon } from "lucide-react";
 import { EventStatus } from "~/constants/status";
 
 interface Event {
@@ -8,6 +15,9 @@ interface Event {
   name: string;
   status: EventStatus;
   balance: number;
+  date: string;
+  members: Array<any>;
+  expenses: Array<any>;
 }
 
 interface EventListProps {
@@ -15,34 +25,85 @@ interface EventListProps {
 }
 
 const EventList = ({ events }: EventListProps) => {
+  const getStatusInfo = (status: EventStatus) => {
+    switch (status) {
+      case "active":
+        return {
+          label: "進行中",
+          desc: "未結算",
+          bgColor: "bg-blue-100 text-blue-800",
+        };
+      case "pending":
+        return {
+          label: "待還款",
+          desc: "部分還款",
+          bgColor: "bg-yellow-100 text-yellow-800",
+        };
+      case "archived":
+        return {
+          label: "已完成",
+          desc: "已結算",
+          bgColor: "bg-green-100 text-green-800",
+        };
+      default:
+        return {
+          label: "未知",
+          desc: "未知狀態",
+          bgColor: "bg-gray-100 text-gray-800",
+        };
+    }
+  };
+
   return (
     <div>
-      <h2 className="text-md font-medium text-[#263238] mb-2">所有事件</h2>
-      <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2">
-        {events.map((e) => (
-          <Link className="block" to={`/events/${e.id}`} key={e.id}>
-            <Card className="p-4">
-              <CardContent className="p-0">
-                <div className="flex justify-between items-center">
-                  <p className="text-[#263238] font-semibold text-sm">
-                    {e.name}
+      <h2 className="text-md font-medium text-[#263238] mb-4">所有事件</h2>
+      <div className="grid grid-cols-1 gap-4 max-h-[500px] overflow-auto">
+        {events.map((event) => {
+          const statusInfo = getStatusInfo(event.status);
+          return (
+            <Link to={`/events/${event.id}`} key={event.id} className="block">
+              <Card className="py-3 gap-3 border border-gray-200 hover:border-[#0066CC]">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">
+                    {event.name}
+                  </CardTitle>
+                  <CardDescription className="flex items-center">
+                    <CalendarIcon className="h-4 w-4 mr-1" />
+                    {event.date}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    {event.members.length} 位成員 • {event.expenses.length}{" "}
+                    筆費用
                   </p>
-                  <StatusBadge status={e.status}></StatusBadge>
-                </div>
-                <div className="mt-2 text-sm text-[#71717A]">
-                  淨餘額：
-                  <span
-                    className={`${
-                      e.balance >= 0 ? "text-[#10B981]" : "text-[#EF4444]"
-                    }`}
-                  >
-                    ${e.balance}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+                  <p className="text-sm text-gray-600 mt-1">
+                    淨餘額：
+                    <span
+                      className={
+                        event.balance >= 0 ? "text-[#10B981]" : "text-[#EF4444]"
+                      }
+                    >
+                      ${event.balance}
+                    </span>
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <div className="w-full flex justify-between items-center">
+                    <span className="text-sm text-gray-500">
+                      {statusInfo.desc}
+                    </span>
+                    <span
+                      className={`text-sm font-medium px-2 py-0.5 rounded-full ${statusInfo.bgColor}`}
+                    >
+                      {statusInfo.label}
+                    </span>
+                  </div>
+                </CardFooter>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

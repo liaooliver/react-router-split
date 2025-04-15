@@ -7,8 +7,8 @@ import {
 
 export default [
   layout("./components/common/layout.tsx", [
-    index("routes/home.tsx"),
-    route("dashboard", "routes/personalDashboard.tsx"),
+    // index("routes/home.tsx"),
+    index("routes/personalDashboard.tsx"),
     route("createEvent", "routes/createEvent.tsx"),
     route("events/:id", "routes/eventDashboard.tsx"),
     route("addExpense", "routes/addExpense.tsx"),

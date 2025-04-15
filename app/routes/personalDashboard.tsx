@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import type { Route } from "./+types/home";
 import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
@@ -6,6 +7,14 @@ import DebtOverview from "~/components/feature/debtOverview";
 import EventList from "~/components/feature/eventList";
 import { EventStatus } from "~/constants/status";
 import { Link } from "react-router";
+import { fetchProtectedData } from "~/services/fetchProtectedData";
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "New React Router App" },
+    { name: "description", content: "Welcome to React Router!" },
+  ];
+}
 
 const PersonalDashboard = () => {
   const [debts, setDebts] = useState([
@@ -33,36 +42,92 @@ const PersonalDashboard = () => {
       name: "露營團",
       status: EventStatus.ACTIVE,
       balance: -200,
+      date: "2025/4/20",
+      members: [
+        { id: 1, name: "小明" },
+        { id: 2, name: "小華" },
+        { id: 3, name: "小智" },
+      ],
+      expenses: [
+        { id: 1, description: "營地費用" },
+        { id: 2, description: "食材" },
+      ],
     },
     {
       id: 2,
       name: "桌遊之夜",
       status: EventStatus.PENDING,
       balance: 150,
+      date: "2025/4/15",
+      members: [
+        { id: 1, name: "小明" },
+        { id: 4, name: "小花" },
+      ],
+      expenses: [{ id: 3, description: "桌遊租借" }],
     },
     {
       id: 3,
       name: "烤肉派對",
       status: EventStatus.ACTIVE,
       balance: 300,
+      date: "2025/4/25",
+      members: [
+        { id: 1, name: "小明" },
+        { id: 2, name: "小華" },
+        { id: 3, name: "小智" },
+        { id: 4, name: "小花" },
+      ],
+      expenses: [
+        { id: 4, description: "烤肉架租借" },
+        { id: 5, description: "食材" },
+        { id: 6, description: "飲料" },
+      ],
     },
     {
       id: 4,
       name: "生日聚會",
       status: EventStatus.ARCHIVED,
       balance: -150,
+      date: "2025/4/10",
+      members: [
+        { id: 1, name: "小明" },
+        { id: 2, name: "小華" },
+        { id: 4, name: "小花" },
+      ],
+      expenses: [
+        { id: 7, description: "蛋糕" },
+        { id: 8, description: "禮物" },
+      ],
     },
     {
       id: 5,
       name: "電影馬拉松",
       status: EventStatus.PENDING,
       balance: 180,
+      date: "2025/4/13",
+      members: [
+        { id: 1, name: "小明" },
+        { id: 3, name: "小智" },
+        { id: 4, name: "小花" },
+      ],
+      expenses: [
+        { id: 9, description: "電影票" },
+        { id: 10, description: "零食" },
+      ],
     },
   ];
 
   const handleMarkPaid = (id: number) => {
     setDebts((prev) => prev.filter((d) => d.id !== id));
   };
+
+  useEffect(() => {
+    const postToken = () => {
+      fetchProtectedData();
+    };
+
+    postToken();
+  }, []);
 
   return (
     <div className="max-w-md mx-auto p-4 space-y-6">
@@ -71,7 +136,7 @@ const PersonalDashboard = () => {
         我的帳本
       </header>
       {/* 欠款與應得 */}
-      <div className="flex justify-between text-center">
+      <div className="flex justify-evenly text-center bg-white p-4 border rounded-xl">
         <div>
           <p className="text-sm text-[#71717A]">總欠款</p>
           <p className="text-[20px] font-semibold text-[#EF4444]">$1200.00</p>

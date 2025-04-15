@@ -45,7 +45,7 @@ const CreateEvent = () => {
     <div className="max-w-md mx-auto p-4 space-y-6">
       {/* Header */}
       <header className="flex items-center justify-between h-16 px-4 relative m-0">
-        <Link to="/dashboard" className="flex items-center gap-4">
+        <Link to="/" className="flex items-center gap-4">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
           <h1 className="text-lg font-semibold text-gray-800">建立分帳事件</h1>
         </Link>

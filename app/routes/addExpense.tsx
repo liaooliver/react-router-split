@@ -62,6 +62,9 @@ function AddExpense() {
       (sum: number, amount) => sum + Number(amount),
       0
     );
+    console.log("form.total", form);
+    console.log("totalPaid", totalPaid);
+    console.log("totalShared", totalShared);
     if (
       totalPaid !== Number(form.total) ||
       totalShared !== Number(form.total)
@@ -149,7 +152,7 @@ function AddExpense() {
                       payers: { ...form.payers, [member]: e.target.value },
                     })
                   }
-                  className="w-20 h-8 border-[#D1D5DB] rounded-md bg-white"
+                  className="w-20 h-8 border-[#D1D5DB] rounded-md bg-white text-[#263238]"
                 />
               </div>
             ))}
@@ -194,7 +197,7 @@ function AddExpense() {
                         shares: { ...form.shares, [member]: e.target.value },
                       })
                     }
-                    className="w-20 h-8 border-[#D1D5DB] rounded-md"
+                    className="w-20 h-8 border-[#D1D5DB] text-[#263238] rounded-md"
                   />
                 </div>
               ))}

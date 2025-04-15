@@ -1,10 +1,9 @@
 import { useState } from "react";
 import type { Route } from "./+types/home";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
 import { GoogleIcon } from "~/assets/icons/google-icon";
-import { EyeIcon, EyeClosedIcon } from "~/assets/icons/eye-icons";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
+import { useAuth } from "~/contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -14,8 +13,30 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
-  const [useEmail, setUseEmail] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const { signInWithGoogle, currentUser } = useAuth();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // 如果用戶已登入，重定向到首頁
+  if (currentUser) {
+    navigate("/");
+    return null;
+  }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setError("");
+      setLoading(true);
+      await signInWithGoogle();
+      navigate("/");
+    } catch (error) {
+      console.error("登入失敗:", error);
+      setError("Google 登入失敗，請稍後再試");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-black relative overflow-hidden">
@@ -94,16 +115,22 @@ export default function Login() {
 
       {/* Main Content Area - Floating centered white card */}
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-auto z-10 p-8">
-        <Link to={{ pathname: "/dashboard" }}>
-          {/* Google Login Button */}
-          <Button
-            variant="outline"
-            className="w-full py-6 flex items-center justify-center gap-2 rounded-lg border-gray-300 "
-          >
-            <GoogleIcon />
-            <span>使用 Google 帳號登入</span>
-          </Button>
-        </Link>
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Google Login Button */}
+        <Button
+          variant="outline"
+          className="w-full py-6 flex items-center justify-center gap-2 rounded-lg border-gray-300"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+        >
+          <GoogleIcon />
+          <span>{loading ? "登入中..." : "使用 Google 帳號登入"}</span>
+        </Button>
 
         {/* Register link */}
         <div className="mt-6 text-center">

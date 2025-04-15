@@ -1,159 +1,98 @@
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent } from "~/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-} from "~/components/ui/alert-dialog";
-import { Pencil, Trash2, User, Info, CheckCircle2 } from "lucide-react";
+import { Dialog, DialogContent } from "~/components/ui/dialog";
 import { PageHeader } from "~/components/common/PageHeader";
 import { AnimatedPageContainer } from "~/components/common/AnimatedPageContainer";
+import { ExpenseDetailCard } from "~/components/feature/ExpenseDetailCard";
+import { ExpenseParticipantsInfo } from "~/components/feature/ExpenseParticipantsInfo";
+import { ExpenseMetaInfo } from "~/components/feature/ExpenseMetaInfo";
+import { ExpenseActionButtons } from "~/components/feature/ExpenseActionButtons";
+import { ExpenseEditForm } from "~/components/feature/ExpenseEditForm";
+import type { Expense, ExpenseFormData } from "~/types/expense";
+
+// 模擬資料，實際應用中應該從 API 獲取
+const mockExpense: Expense = {
+  id: 1,
+  title: "與朋友的晚餐",
+  amount: 50.0,
+  date: "2023年10月26日 晚上8:30",
+  category: "food",
+  splitMethod: "equal",
+  isSettled: false,
+  payers: [
+    { userId: 1, name: "小明", amount: 30.0 },
+    { userId: 2, name: "小美", amount: 20.0 },
+  ],
+  shares: [
+    { userId: 1, name: "小明", amount: 25.0 },
+    { userId: 2, name: "小美", amount: 25.0 },
+  ],
+  note: "今天小明請客 XD",
+};
 
 export default function ExpenseDetails() {
-  const [isSettled, setIsSettled] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [expense, setExpense] = useState<Expense>(mockExpense);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleEdit = () => {
-    console.log("導向編輯頁面...");
+    setShowEditDialog(true);
   };
 
   const handleDelete = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = () => {
-    setShowDeleteConfirm(false);
     console.log("刪除成功");
   };
 
   const toggleSettle = () => {
-    setIsSettled((prev) => !prev);
+    setExpense((prev) => ({
+      ...prev,
+      isSettled: !prev.isSettled,
+    }));
+  };
+
+  const handleEditSubmit = (data: ExpenseFormData) => {
+    setExpense((prev) => ({
+      ...prev,
+      ...data,
+    }));
+    setShowEditDialog(false);
   };
 
   return (
     <AnimatedPageContainer>
       <PageHeader title="費用詳情" />
 
-      {/* 基本資訊 */}
-      <Card>
-        <CardContent className="space-y-1 pt-4">
-          <div className="text-base font-semibold text-gray-800">
-            與朋友的晚餐
-          </div>
-          <div className="text-2xl font-bold text-gray-800">$50.00</div>
-          <div className="text-sm text-gray-500">2023年10月26日 晚上8:30</div>
-          {!isSettled && (
-            <div className="flex items-center gap-1 text-orange-700 text-sm pt-2">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>尚未結算</span>
-            </div>
-          )}
-          {isSettled && (
-            <div className="flex items-center gap-1 text-green-600 text-sm pt-2">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>已結算</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <ExpenseDetailCard expense={expense} />
 
-      {/* 付款人 */}
-      <div>
-        <div className="flex items-center gap-1 text-sm font-medium text-gray-800">
-          <User className="w-4 h-4" />
-          <span>付款人</span>
-        </div>
-        <div className="pl-2 pt-2 space-y-2">
-          <div className="text-gray-700">小明：$30.00</div>
-          <div className="text-gray-700">小美：$20.00</div>
-        </div>
-      </div>
+        <ExpenseParticipantsInfo
+          payers={expense.payers}
+          shares={expense.shares}
+        />
 
-      {/* 分攤方式 */}
-      <div>
-        <div className="flex items-center gap-1 text-sm font-medium text-gray-800">
-          <Info className="w-4 h-4" />
-          <span>分攤方式</span>
-        </div>
-        <div className="pl-2 pt-2 text-gray-700">平均分攤</div>
-      </div>
+        <ExpenseMetaInfo expense={expense} />
 
-      {/* 分攤金額 */}
-      <div>
-        <div className="flex items-center gap-1 text-sm font-medium text-gray-800">
-          <User className="w-4 h-4" />
-          <span>分攤金額</span>
-        </div>
-        <div className="pl-2 pt-2 space-y-2">
-          <div className="text-gray-700">小明：$25.00</div>
-          <div className="text-gray-700">小美：$25.00</div>
-        </div>
-      </div>
-
-      {/* 備註 */}
-      <div>
-        <div className="text-sm font-medium text-gray-800">備註</div>
-        <div className="pl-2 pt-2 text-gray-700">今天小明請客 XD</div>
-      </div>
-
-      {/* 類別 */}
-      <div>
-        <div className="text-sm font-medium text-gray-800">類別</div>
-        <div className="pl-2 pt-2 text-gray-700">餐飲</div>
-      </div>
-
-      {/* 狀態切換示範按鈕 */}
-      <div className="pt-2 text-right">
-        <Button variant="outline" className="text-sm" onClick={toggleSettle}>
-          {isSettled ? "標記為未結算" : "標記為已結算"}
-        </Button>
-      </div>
-
-      {/* 若未結算才顯示按鈕 */}
-      {!isSettled && (
-        <div className="flex justify-between pt-4">
-          <Button
-            onClick={handleEdit}
-            className="bg-[#FFC107] text-white hover:bg-yellow-500"
-          >
-            <Pencil className="mr-2 h-4 w-4" /> 編輯
+        <div className="pt-2 text-right">
+          <Button variant="outline" className="text-sm" onClick={toggleSettle}>
+            {expense.isSettled ? "標記為未結算" : "標記為已結算"}
           </Button>
-
-          <AlertDialog
-            open={showDeleteConfirm}
-            onOpenChange={setShowDeleteConfirm}
-          >
-            <AlertDialogTrigger asChild>
-              <Button
-                onClick={handleDelete}
-                className="bg-red-500 text-white hover:bg-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> 刪除
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>確定要刪除這筆費用嗎？</AlertDialogHeader>
-              <AlertDialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDeleteConfirm(false)}
-                >
-                  取消
-                </Button>
-                <Button
-                  className="bg-red-500 text-white"
-                  onClick={confirmDelete}
-                >
-                  確定刪除
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
-      )}
+
+        <ExpenseActionButtons
+          isSettled={expense.isSettled}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </div>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[500px] bg-white text-black">
+          <ExpenseEditForm
+            expense={expense}
+            onSubmit={handleEditSubmit}
+            onCancel={() => setShowEditDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </AnimatedPageContainer>
   );
 }
