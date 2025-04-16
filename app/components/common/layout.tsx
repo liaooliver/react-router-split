@@ -1,6 +1,8 @@
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 import { appDesignTokens } from "~/assets/style/tokens";
 import Navbar from "./navbar";
+import { useAuth } from "~/contexts/AuthContext";
+import { useEffect } from "react";
 
 const GradientBackground = () => (
   <div className="absolute top-0 left-0 w-full h-full z-0">
@@ -76,14 +78,25 @@ const GradientBackground = () => (
   </div>
 );
 
-const Layout = () => (
-  <div className="min-h-screen font-sans relative overflow-hidden">
-    <GradientBackground />
-    <Navbar iconType="coin" />
-    <main className="w-full max-w-mobile md:max-w-tablet lg:max-w-desktop mx-auto p-4 z-10 relative">
-      <Outlet />
-    </main>
-  </div>
-);
+const Layout = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!currentUser) {
+      navigate("/login");
+    }
+  }, []);
+
+  return (
+    <div className="min-h-screen font-sans relative overflow-hidden">
+      <GradientBackground />
+      <Navbar iconType="coin" />
+      <main className="w-full max-w-mobile md:max-w-tablet lg:max-w-desktop mx-auto p-4 z-10 relative">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
 
 export default Layout;

@@ -121,14 +121,6 @@ const PersonalDashboard = () => {
     setDebts((prev) => prev.filter((d) => d.id !== id));
   };
 
-  useEffect(() => {
-    const postToken = () => {
-      fetchProtectedData();
-    };
-
-    postToken();
-  }, []);
-
   return (
     <div className="max-w-md mx-auto p-4 space-y-6">
       {/* Header */}
