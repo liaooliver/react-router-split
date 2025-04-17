@@ -5,6 +5,36 @@ import type {
   DashboardResponseInterface,
   DashboardErrorResponseInterface,
 } from "~/types/dashboard";
+import type { CreateEventResponseInterface } from "~/types/event";
+
+export async function fetchProtectedCreateEvent(
+  name: string
+): Promise<CreateEventResponseInterface> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("尚未登入");
+
+  const idToken = await user.getIdToken();
+
+  try {
+    const response = await axiosInstance.post<CreateEventResponseInterface>(
+      "/events",
+      {
+        name,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data as CreateEventResponseInterface;
+    }
+    throw new Error("新增事件失敗");
+  }
+}
 
 export async function fetchProtectedDashboardData(): Promise<DashboardResponseInterface> {
   const user = auth.currentUser;

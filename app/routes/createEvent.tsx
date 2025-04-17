@@ -3,20 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-
-// 模擬 API 呼叫
-const mockCreateEvent = async (
-  eventName: string
-): Promise<{ id: number; name: string }> => {
-  // 模擬 API 延遲
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // 模擬回傳新建立的事件資料
-  return {
-    id: Math.floor(Math.random() * 1000) + 1, // 隨機產生 ID
-    name: eventName,
-  };
-};
+import { fetchProtectedCreateEvent } from "~/services/fetchProtectedData";
 
 const CreateEvent = () => {
   const [eventName, setEventName] = useState("");
@@ -28,11 +15,10 @@ const CreateEvent = () => {
     setIsLoading(true);
 
     try {
-      // 呼叫模擬的 API
-      const newEvent = await mockCreateEvent(eventName);
+      const newEvent = await fetchProtectedCreateEvent(eventName);
 
       // 轉跳到新建立的事件頁面
-      navigate(`/events/${newEvent.id}`);
+      navigate(`/events/${newEvent.event.id}`);
     } catch (error) {
       console.error("建立事件失敗:", error);
       alert("建立事件失敗，請稍後再試");

@@ -24,3 +24,16 @@ export interface Event {
   balances: Balance[];
   expenses: Expense[];
 }
+
+export interface CreateEventResponseInterface {
+  status: string;
+  message: string;
+  event: {
+    id: number;
+    name: string;
+    creator_id: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
