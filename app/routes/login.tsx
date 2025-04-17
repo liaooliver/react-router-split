@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Route } from "./+types/home";
 import { Button } from "~/components/ui/button";
 import { GoogleIcon } from "~/assets/icons/google-icon";
 import { useNavigate } from "react-router";
 import { useAuth } from "~/contexts/AuthContext";
+import { fetchProtectedData } from "~/services/fetchProtectedData";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -18,17 +19,19 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 如果用戶已登入，重定向到首頁
-  if (currentUser) {
-    navigate("/");
-    return null;
-  }
+  useEffect(() => {
+    // 如果用戶已登入，重定向到首頁
+    if (currentUser) {
+      navigate("/");
+    }
+  }, []);
 
   const handleGoogleSignIn = async () => {
     try {
       setError("");
       setLoading(true);
       await signInWithGoogle();
+      fetchProtectedData();
       navigate("/");
     } catch (error) {
       console.error("登入失敗:", error);

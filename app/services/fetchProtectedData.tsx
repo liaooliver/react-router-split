@@ -1,45 +1,67 @@
-// From src/services/api.js example
 import { auth } from "~/lib/firebase";
+import axiosInstance from "~/lib/axios";
+import axios from "axios";
+import type {
+  DashboardResponseInterface,
+  DashboardErrorResponseInterface,
+} from "~/types/dashboard";
 
-const API_BASE_URL = "http://localhost:3000/api";
+export async function fetchProtectedDashboardData(): Promise<DashboardResponseInterface> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("尚未登入");
 
-// Helper function to make authenticated requests
+  const idToken = await user.getIdToken();
+
+  try {
+    const response = await axiosInstance.get<DashboardResponseInterface>(
+      "/dashboard",
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw error.response.data as DashboardErrorResponseInterface;
+    }
+    throw new Error("無法取得儀表板資料");
+  }
+}
+
 export async function fetchProtectedData() {
-  const user = auth.currentUser; // 1. Get the current user from Firebase Auth
+  const user = auth.currentUser;
   if (!user) {
     throw new Error("No user is currently signed in.");
   }
 
   try {
-    // 2. Get the *latest* Firebase ID token (true forces refresh)
     const idToken = await user.getIdToken(true);
 
-    // 3. Prepare headers, adding the Authorization Bearer token
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${idToken}`, // <<< THE KEY INTEGRATION PART
-    };
+    const response = await axiosInstance.post(
+      `/users/google/find-or-create`,
+      {}, // empty body
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
 
-    // 4. Make the actual fetch request to your backend
-    const response = await fetch(`${API_BASE_URL}/login/google`, {
-      method: "POST",
-      headers: headers,
-    });
-
-    // ... (Response handling as shown before) ...
-
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: response.statusText }));
+    if (response.status === 204) return null;
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error(
+        `API call to /login/google failed:`,
+        error.response?.data || error.message
+      );
       throw new Error(
-        errorData.error || `HTTP error! status: ${response.status}`
+        error.response?.data?.error ||
+          `HTTP error! status: ${error.response?.status}`
       );
     }
-    if (response.status === 204) return null;
-    return await response.json();
-  } catch (error) {
-    console.error(`API call to /login/google failed:`, error);
     throw error;
   }
 }

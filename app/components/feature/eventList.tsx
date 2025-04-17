@@ -9,23 +9,15 @@ import {
 } from "~/components/ui/card";
 import { CalendarIcon } from "lucide-react";
 import { EventStatus } from "~/constants/status";
-
-interface Event {
-  id: number;
-  name: string;
-  status: EventStatus;
-  balance: number;
-  date: string;
-  members: Array<any>;
-  expenses: Array<any>;
-}
+import type { EventInterface } from "~/types/dashboard";
 
 interface EventListProps {
-  events: Event[];
+  events: EventInterface[];
 }
 
 const EventList = ({ events }: EventListProps) => {
   const getStatusInfo = (status: EventStatus) => {
+    console.log("status", status);
     switch (status) {
       case "active":
         return {
@@ -39,7 +31,7 @@ const EventList = ({ events }: EventListProps) => {
           desc: "部分還款",
           bgColor: "bg-yellow-100 text-yellow-800",
         };
-      case "archived":
+      case "settled":
         return {
           label: "已完成",
           desc: "已結算",

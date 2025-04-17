@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { fetchProtectedDashboardData } from "~/services/fetchProtectedData";
+import type { DashboardDataInterface } from "~/types/dashboard";
 import type { Route } from "./+types/home";
 import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import DebtOverview from "~/components/feature/debtOverview";
 import EventList from "~/components/feature/eventList";
-import { EventStatus } from "~/constants/status";
 import { Link } from "react-router";
-import { fetchProtectedData } from "~/services/fetchProtectedData";
+import { useAuth } from "~/contexts/AuthContext";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -17,108 +18,64 @@ export function meta({}: Route.MetaArgs) {
 }
 
 const PersonalDashboard = () => {
-  const [debts, setDebts] = useState([
-    {
-      id: 1,
-      from: "小智",
-      to: "小明",
-      amount: 266.67,
-      event: "晚餐聚會",
-      paid: false,
-    },
-    {
-      id: 2,
-      from: "小花",
-      to: "小華",
-      amount: 150,
-      event: "電影日",
-      paid: false,
-    },
-  ]);
+  // 1. 所有 hooks 一律放最上面
+  const { currentUser } = useAuth();
+  const [dashboardData, setDashboardData] =
+    useState<DashboardDataInterface | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const events = [
-    {
-      id: 1,
-      name: "露營團",
-      status: EventStatus.ACTIVE,
-      balance: -200,
-      date: "2025/4/20",
-      members: [
-        { id: 1, name: "小明" },
-        { id: 2, name: "小華" },
-        { id: 3, name: "小智" },
-      ],
-      expenses: [
-        { id: 1, description: "營地費用" },
-        { id: 2, description: "食材" },
-      ],
-    },
-    {
-      id: 2,
-      name: "桌遊之夜",
-      status: EventStatus.PENDING,
-      balance: 150,
-      date: "2025/4/15",
-      members: [
-        { id: 1, name: "小明" },
-        { id: 4, name: "小花" },
-      ],
-      expenses: [{ id: 3, description: "桌遊租借" }],
-    },
-    {
-      id: 3,
-      name: "烤肉派對",
-      status: EventStatus.ACTIVE,
-      balance: 300,
-      date: "2025/4/25",
-      members: [
-        { id: 1, name: "小明" },
-        { id: 2, name: "小華" },
-        { id: 3, name: "小智" },
-        { id: 4, name: "小花" },
-      ],
-      expenses: [
-        { id: 4, description: "烤肉架租借" },
-        { id: 5, description: "食材" },
-        { id: 6, description: "飲料" },
-      ],
-    },
-    {
-      id: 4,
-      name: "生日聚會",
-      status: EventStatus.ARCHIVED,
-      balance: -150,
-      date: "2025/4/10",
-      members: [
-        { id: 1, name: "小明" },
-        { id: 2, name: "小華" },
-        { id: 4, name: "小花" },
-      ],
-      expenses: [
-        { id: 7, description: "蛋糕" },
-        { id: 8, description: "禮物" },
-      ],
-    },
-    {
-      id: 5,
-      name: "電影馬拉松",
-      status: EventStatus.PENDING,
-      balance: 180,
-      date: "2025/4/13",
-      members: [
-        { id: 1, name: "小明" },
-        { id: 3, name: "小智" },
-        { id: 4, name: "小花" },
-      ],
-      expenses: [
-        { id: 9, description: "電影票" },
-        { id: 10, description: "零食" },
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchProtectedDashboardData();
+        setDashboardData(data.data);
+      } catch (err: any) {
+        setError(err?.error || err?.message || "獲取資料失敗");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const getToken = async () => {
+      if (currentUser) {
+        const token = await currentUser.getIdToken(true);
+        console.log(token);
+        localStorage.setItem("token", JSON.stringify(token));
+      }
+    };
+    getToken();
+  }, [currentUser]);
+
+  // 2. early return 放 hooks 之後
+  if (loading) {
+    return <div className="text-center mt-8">載入中...</div>;
+  }
+  if (error) {
+    return <div className="text-center mt-8 text-red-500">{error}</div>;
+  }
+  if (!dashboardData) {
+    return <div className="text-center mt-8">沒有資料</div>;
+  }
+
+  const { events, unpaidDebtsTotal, balanceTotal, user, debtOverview } =
+    dashboardData;
+  const debts = debtOverview?.debts || [];
 
   const handleMarkPaid = (id: number) => {
-    setDebts((prev) => prev.filter((d) => d.id !== id));
+    // setDashboardData((prev) => ({
+    //   ...prev,
+    //   events: prev.events.map((event) =>
+    //     event.id === id
+    //       ? { ...event, status: EventStatus.ACTIVE }
+    //       : event
+    //   ),
+    // }));
   };
 
   return (
@@ -131,11 +88,15 @@ const PersonalDashboard = () => {
       <div className="flex justify-evenly text-center bg-white p-4 border rounded-xl">
         <div>
           <p className="text-sm text-[#71717A]">總欠款</p>
-          <p className="text-[20px] font-semibold text-[#EF4444]">$1200.00</p>
+          <p className="text-[20px] font-semibold text-[#EF4444]">
+            ${unpaidDebtsTotal}
+          </p>
         </div>
         <div>
           <p className="text-sm text-[#71717A]">總應得</p>
-          <p className="text-[20px] font-semibold text-[#10B981]">$800.00</p>
+          <p className="text-[20px] font-semibold text-[#10B981]">
+            ${balanceTotal}
+          </p>
         </div>
       </div>
       {/* 最近活躍事件 */}
