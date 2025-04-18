@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router";
+import { fetchProtectedEventDetail } from "~/services/fetchProtectedEventDetail";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -41,140 +43,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
-
-// 擴展 Event 類型以包含新的類別分布數據
-const mockEvent = {
-  eventId: "20200101",
-  title: "週末烤肉聚會",
-  status: "unsettled", // "unsettled" | "pending" | "settled"
-  members: [
-    { id: 1, name: "小美", avatar: "https://i.pravatar.cc/100?u=1" },
-    { id: 2, name: "阿宏", avatar: "https://i.pravatar.cc/100?u=2" },
-    { id: 3, name: "志明", avatar: "https://i.pravatar.cc/100?u=3" },
-  ],
-  balances: [
-    { userId: 1, name: "小美", amount: 120 },
-    { userId: 2, name: "阿宏", amount: -60 },
-    { userId: 3, name: "志明", amount: -60 },
-  ],
-  expenses: [
-    {
-      id: 101,
-      title: "肉品食材",
-      amount: 180,
-      category: "food",
-      paidBy: 1,
-      createdAt: "2025-04-10",
-    },
-    {
-      id: 102,
-      title: "飲料啤酒",
-      amount: 60,
-      category: "drinks",
-      paidBy: 1,
-      createdAt: "2025-04-10",
-    },
-  ],
-  // 新增的字段
-  categoryDistribution: [
-    { category: "food", amount: 180, color: "#EF4444" },
-    { category: "drinks", amount: 60, color: "#00C4CC" },
-  ],
-  totalAmount: 240,
-  // 結算後才會有的債務關係
-  debts: [
-    {
-      id: 201,
-      fromUserId: 2,
-      fromUserName: "阿宏",
-      toUserId: 1,
-      toUserName: "小美",
-      amount: 60,
-      paid: false,
-      paidAt: null,
-      relatedExpenses: [
-        { id: 101, title: "肉品食材", amount: 45, date: "2025-04-10" },
-        { id: 102, title: "飲料啤酒", amount: 15, date: "2025-04-10" },
-      ],
-    },
-    {
-      id: 202,
-      fromUserId: 3,
-      fromUserName: "志明",
-      toUserId: 1,
-      toUserName: "小美",
-      amount: 60,
-      paid: false,
-      paidAt: null,
-      relatedExpenses: [
-        { id: 101, title: "肉品食材", amount: 45, date: "2025-04-10" },
-        { id: 102, title: "飲料啤酒", amount: 15, date: "2025-04-10" },
-      ],
-    },
-  ],
-};
-
-// SVG 圓環圖組件
-const DonutChart = ({ data, totalAmount }) => {
-  // 計算各部分的百分比和角度
-  let startAngle = 0;
-  const pathData = data.map((item, index) => {
-    const percentage = (item.amount / totalAmount) * 100;
-    const angle = (percentage / 100) * 360;
-    const endAngle = startAngle + angle;
-
-    const startRad = ((startAngle - 90) * Math.PI) / 180;
-    const endRad = ((endAngle - 90) * Math.PI) / 180;
-
-    const x1 = 40 + 30 * Math.cos(startRad);
-    const y1 = 40 + 30 * Math.sin(startRad);
-    const x2 = 40 + 30 * Math.cos(endRad);
-    const y2 = 40 + 30 * Math.sin(endRad);
-
-    const largeArcFlag = angle > 180 ? 1 : 0;
-
-    const pathString = `M 40 40 L ${x1} ${y1} A 30 30 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
-
-    startAngle = endAngle;
-
-    return (
-      <path
-        key={index}
-        d={pathString}
-        fill={item.color}
-        stroke="#fff"
-        strokeWidth="1"
-        className="transition-all duration-300 hover:opacity-80"
-      />
-    );
-  });
-
-  return (
-    <div className="relative">
-      <svg viewBox="0 0 80 80" width="80" height="80" className="mx-auto">
-        {pathData}
-        <circle cx="40" cy="40" r="15" fill="#fff" />
-        <text
-          x="40"
-          y="44"
-          textAnchor="middle"
-          fontSize="8"
-          fontWeight="bold"
-          fill="#263238"
-        >
-          ${totalAmount}
-        </text>
-      </svg>
-      {/* 右上角手繪風格錢幣圖示 */}
-      <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-        <span className="text-white font-bold text-xs">$</span>
-      </div>
-    </div>
-  );
-};
+import DonutChart from "~/components/feature/DonutChart";
+import LoadingSpinner from "~/components/common/LoadingSpinner";
+import axiosInstance from "~/lib/axios";
+import { auth } from "~/lib/firebase";
+import DebtOverview from "~/components/feature/debtOverview";
+import type {
+  DebtInterface,
+  EventDetailInterface,
+} from "~/types/eventDashboard";
+import type { Route } from "../+types/root";
+import { isAuth } from "~/services/auth";
 
 // 債務關係組件
-const RenderDebts = ({ debts, onMarkAsPaid }) => {
+const RenderDebts = ({
+  debts,
+  onMarkAsPaid,
+}: {
+  debts: DebtInterface[];
+  onMarkAsPaid: (debtId: number) => void;
+}) => {
   return (
     <div className="space-y-2">
       {debts.map((debt) => (
@@ -186,33 +74,36 @@ const RenderDebts = ({ debts, onMarkAsPaid }) => {
             <AccordionTrigger className="px-4 py-2 hover:no-underline">
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">{debt.fromUserName}</span>
+                  <span className="text-sm text-black">{debt.toUserName}</span>
                   <ChevronRight className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-medium text-red-500">
                     ${debt.amount.toFixed(2)}
                   </span>
                   <ChevronRight className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm">{debt.toUserName}</span>
+                  <span className="text-sm text-black">
+                    {debt.fromUserName}
+                  </span>
                 </div>
                 {debt.paid ? (
                   <span className="px-3 py-1 text-xs font-medium text-white bg-green-500 rounded-md">
                     已還款
                   </span>
-                ) : (
-                  <Button
-                    size="sm"
-                    className="px-3 py-1 text-xs font-medium text-white bg-[#00C4CC] hover:bg-[#00B0B6] rounded-md"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onMarkAsPaid(debt.id);
-                    }}
-                  >
-                    標記已付
-                  </Button>
-                )}
+                ) : null}
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pt-0 pb-2">
+              {!debt.paid && (
+                <Button
+                  size="sm"
+                  className="mb-2 px-3 py-1 text-xs font-medium text-white bg-[#00C4CC] hover:bg-[#00B0B6] rounded-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMarkAsPaid(debt.id);
+                  }}
+                >
+                  標記已付
+                </Button>
+              )}
               <div className="pl-6 space-y-2">
                 {debt.relatedExpenses.map((exp) => (
                   <div key={exp.id} className="flex justify-between text-sm">
@@ -236,21 +127,37 @@ const RenderDebts = ({ debts, onMarkAsPaid }) => {
   );
 };
 
-const EventDashboard = () => {
-  const [event, setEvent] = useState(mockEvent);
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+  const isLogged = await isAuth();
+  if (!isLogged) {
+    throw new Response("未登入", { status: 401 });
+  }
+  const eventId = params.id;
+  try {
+    const data = await fetchProtectedEventDetail(eventId!);
+    console.log("data", data);
+    return { event: data.data };
+  } catch (err: any) {
+    throw new Response(err.message || "資料載入失敗", { status: 500 });
+  }
+}
+
+const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
+  const [event, setEvent] = useState(loaderData.event);
+
+  // UI互動相關本地狀態
   const [showExpenses, setShowExpenses] = useState(false);
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-  const [removeConfirmMemberId, setRemoveConfirmMemberId] = useState(null);
+  const [removeConfirmMemberId, setRemoveConfirmMemberId] = useState<
+    string | null
+  >(null);
   const [newMemberName, setNewMemberName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
 
-  const isSettled = event.status === "settled";
-  const isPending = event.status === "pending";
-
   // 檢查成員是否重複
-  const isNameDuplicate = (name) => {
-    return event.members.some(
+  const isNameDuplicate = (name: string) => {
+    return event?.members.some(
       (member) => member.name.toLowerCase() === name.toLowerCase()
     );
   };
@@ -275,42 +182,44 @@ const EventDashboard = () => {
       avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
     };
 
-    setEvent((prev) => ({
-      ...prev,
-      members: [...prev.members, newMember],
-    }));
+    // 這裡應呼叫 API 新增成員，然後 revalidate 或重新導向
+    // setEvent((prev) => ({
+    //   ...prev,
+    //   members: [...prev.members, newMember],
+    // }));
     setNewMemberName("");
     setAddMemberDialogOpen(false);
     setShowError(false);
+    // TODO: 呼叫 API 並重新取得 event 資料
   };
 
   // 檢查成員是否可以被刪除
-  const canDeleteMember = (memberId) => {
-    return !event.expenses.some(
-      (expense) =>
-        expense.paidBy === memberId || expense.participants?.includes(memberId)
-    );
+  const canDeleteMember = (memberId: string) => {
+    return !event.expenses.some((expense) => expense.paidBy === memberId);
   };
 
   // 處理刪除成員
-  const handleRemoveMember = (memberId) => {
+  const handleRemoveMember = (memberId: string) => {
     if (!canDeleteMember(memberId)) {
       setErrorMessage("此成員已參與費用記錄，無法移除");
       setShowError(true);
       return;
     }
 
-    setEvent((prev) => ({
-      ...prev,
-      members: prev.members.filter((m) => m.id !== memberId),
-    }));
+    // 這裡應呼叫 API 刪除成員，然後 revalidate 或重新導向
+    // setEvent((prev) => ({
+    //   ...prev,
+    //   members: prev.members.filter((m) => m.id !== memberId),
+    // }));
     setRemoveConfirmMemberId(null);
     setShowError(false);
+    // TODO: 呼叫 API 並重新取得 event 資料
   };
 
-  const handleSettleEvent = () => {
+  const handleSettleEvent = async () => {
     // 檢查餘額總和是否為0
-    const totalBalance = event.balances.reduce((sum, b) => sum + b.amount, 0);
+    const totalBalance: number =
+      event?.balances.reduce((sum, b) => sum + b.amount, 0) || 0;
 
     if (Math.abs(totalBalance) > 0.01) {
       // 考慮浮點數精度問題
@@ -318,38 +227,32 @@ const EventDashboard = () => {
       return;
     }
 
-    // 更新事件狀態為pending
-    setEvent((prev) => ({
-      ...prev,
-      status: "pending",
-    }));
-
-    // 清除錯誤訊息
-    setErrorMessage("");
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("尚未登入");
+      const idToken = await user.getIdToken();
+      await axiosInstance.post(
+        `/settlement/events/${event.eventId}/settle`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        }
+      );
+      // 呼叫 API 並重新取得 event 資料
+      refreshEventDetail();
+    } catch (err) {
+      setErrorMessage("結算失敗，請稍後再試。");
+    }
   };
 
-  const handleMarkAsPaid = (debtId) => {
-    // 確認提示訊息應該在實際應用中以對話框形式顯示
-    const debt = event.debts.find((d) => d.id === debtId);
-    if (!debt) return;
-
-    // 更新債務的paid狀態
-    setEvent((prev) => ({
-      ...prev,
-      debts: prev.debts.map((d) =>
-        d.id === debtId
-          ? { ...d, paid: true, paidAt: new Date().toISOString().split("T")[0] }
-          : d
-      ),
-    }));
-
-    // 檢查是否所有債務都已還款
-    const allPaid = event.debts.every((d) => (d.id === debtId ? true : d.paid));
-    if (allPaid) {
-      setEvent((prev) => ({
-        ...prev,
-        status: "settled",
-      }));
+  const refreshEventDetail = async () => {
+    try {
+      const newEvent = await fetchProtectedEventDetail(event.eventId);
+      setEvent(newEvent.data);
+    } catch (err) {
+      setErrorMessage("重新載入失敗，請稍後再試。");
     }
   };
 
@@ -368,7 +271,7 @@ const EventDashboard = () => {
                 <div className="w-10 h-10 bg-[#0066CC] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#0052A3] transition-colors">
                   <Plus className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xs mt-1">新增</span>
+                <span className="text-xs mt-1 text-black">新增</span>
               </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -415,14 +318,12 @@ const EventDashboard = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
           {/* 分隔線 */}
-          {event.members.length > 0 && (
+          {loaderData.event.members.length > 0 && (
             <div className="h-10 w-px bg-[#D1D5DB] mx-2"></div>
           )}
-
           {/* 成員頭像列表 */}
-          {event.members.map((member) => (
+          {loaderData.event.members.map((member) => (
             <div
               key={member.id}
               className="flex flex-col items-center mx-2 relative group"
@@ -433,7 +334,7 @@ const EventDashboard = () => {
                   {member.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-xs mt-1">{member.name}</span>
+              <span className="text-xs mt-1 text-black">{member.name}</span>
 
               {/* 刪除按鈕 */}
               <AlertDialog
@@ -491,14 +392,14 @@ const EventDashboard = () => {
     );
   };
 
-  return (
+  return event ? (
     <AnimatedPageContainer>
-      <PageHeader title={event.title} />
+      <PageHeader title={event.title} path="/" />
 
       {/* 成員區塊 */}
       <div className="mb-4">
         <h2 className="text-base font-medium text-[#263238] mb-2">成員</h2>
-        {renderMemberAvatars()}
+        {event && renderMemberAvatars()}
       </div>
 
       {/* 類別分佈與統計 - 新增部分 */}
@@ -526,9 +427,14 @@ const EventDashboard = () => {
       </div>
 
       {/* 已結算提示（結算後顯示） */}
-      {(isPending || isSettled) && (
+      {(event.status === "settled" || event.status === "finalized") && (
         <div className="text-center mb-4">
-          <p className="text-base font-medium text-green-500">已結算</p>
+          {event.status === "settled" && (
+            <p className="text-base font-medium text-green-500">已結算</p>
+          )}
+          {event.status === "finalized" && (
+            <p className="text-base font-medium text-yellow-500">已結案</p>
+          )}
           <Button
             variant="outline"
             className="mt-2 w-48 border-[#D1D5DB] rounded-md"
@@ -540,15 +446,15 @@ const EventDashboard = () => {
       )}
 
       {/* 費用列表（未結算或點擊展開時顯示） */}
-      {(!isPending && !isSettled) || showExpenses ? (
+      {(event.status !== "settled" && event.status !== "finalized") ||
+      showExpenses ? (
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-base font-medium text-[#263238]">費用列表</h2>
-            {!isPending && !isSettled && (
+            {event.status !== "settled" && event.status !== "finalized" && (
               <Link
                 to={{
-                  pathname: "/addExpense",
-                  search: `?event=${event.eventId}`,
+                  pathname: `/addExpense/${event.eventId}`,
                 }}
               >
                 <Button className="bg-[#00C4CC] text-white cursor-pointer rounded px-3 h-9 hover:bg-[#00B0B6]">
@@ -581,18 +487,19 @@ const EventDashboard = () => {
                         {exp.title} - ${exp.amount}
                       </p>
                     </div>
-                    {!(isPending || isSettled) && (
-                      <div className="flex items-center gap-2">
-                        <Link to={`/expenseDetails/${exp.id}`}>
+                    {event.status !== "settled" &&
+                      event.status !== "finalized" && (
+                        <div className="flex items-center gap-2">
+                          <Link to={`/expenseDetails/${exp.id}`}>
+                            <Button variant="ghost" size="icon">
+                              <Pencil className="w-4 h-4 text-[#00C4CC]" />
+                            </Button>
+                          </Link>
                           <Button variant="ghost" size="icon">
-                            <Pencil className="w-4 h-4 text-[#00C4CC]" />
+                            <Trash2 className="w-4 h-4 text-red-500" />
                           </Button>
-                        </Link>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </div>
-                    )}
+                        </div>
+                      )}
                   </CardContent>
                 </Card>
               ))
@@ -602,17 +509,24 @@ const EventDashboard = () => {
       ) : null}
 
       {/* 債務關係（結算後顯示） */}
-      {(isPending || isSettled) && (
+      {(event.status === "settled" || event.status === "finalized") && (
         <div className="mb-4">
-          <h2 className="text-base font-medium text-[#263238] mb-2">
-            債務關係
-          </h2>
-          <RenderDebts debts={event.debts} onMarkAsPaid={handleMarkAsPaid} />
+          {event.debts.length > 0 && (
+            <DebtOverview
+              debts={event.debts}
+              onPaidSuccess={refreshEventDetail}
+            />
+          )}
+          {event.debts.length === 0 && (
+            <div className="text-sm text-center text-gray-400">
+              目前無債務關係
+            </div>
+          )}
         </div>
       )}
 
       {/* 結算按鈕（未結算時顯示） */}
-      {!isPending && !isSettled && (
+      {event.status !== "settled" && event.status !== "finalized" && (
         <div className="text-center mt-4">
           {errorMessage && (
             <p className="text-xs text-red-500 mb-2">{errorMessage}</p>
@@ -626,6 +540,8 @@ const EventDashboard = () => {
         </div>
       )}
     </AnimatedPageContainer>
+  ) : (
+    <LoadingSpinner text="活動資料載入中..." />
   );
 };
 

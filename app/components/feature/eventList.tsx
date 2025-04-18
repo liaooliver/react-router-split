@@ -8,7 +8,7 @@ import {
   CardDescription,
 } from "~/components/ui/card";
 import { CalendarIcon } from "lucide-react";
-import { EventStatus } from "~/constants/status";
+import type { EventStatus } from "~/constants/status";
 import type { EventInterface } from "~/types/dashboard";
 
 interface EventListProps {
@@ -33,9 +33,15 @@ const EventList = ({ events }: EventListProps) => {
         };
       case "settled":
         return {
-          label: "已完成",
+          label: "已結算",
           desc: "已結算",
           bgColor: "bg-green-100 text-green-800",
+        };
+      case "finalized":
+        return {
+          label: "已完成",
+          desc: "已完成",
+          bgColor: "bg-gray-900 text-gray-100",
         };
       default:
         return {

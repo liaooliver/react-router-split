@@ -1,5 +1,6 @@
-import { useMemo, useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import type { Route } from "./+types/addExpense";
 import { Input } from "~/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Label } from "~/components/ui/label";
@@ -14,40 +15,32 @@ import { Button } from "~/components/ui/button";
 import { PageHeader } from "~/components/common/PageHeader";
 import { AnimatedPageContainer } from "~/components/common/AnimatedPageContainer";
 
-function AddExpense() {
-  const { id: eventId } = useParams();
+import { clientLoader } from "./addExpense.clientLoader";
+export { clientLoader };
+
+function AddExpense({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
 
-  // ✅ 假資料（可自行調整）
-  const mockMembers = useMemo(() => ["小美", "阿成", "曉明"], []);
-  const [members, setMembers] = useState<string[]>([]);
+  // 直接用 loaderData 初始化 members, categories
+  const [members] = useState<string[]>(loaderData.members.map((m) => m.name));
+  const [categories] = useState(loaderData.categories);
 
   const [form, setForm] = useState({
     description: "",
     total: "",
-    payers: {},
+    payers: loaderData.members.reduce<Record<string, number>>((acc, m) => {
+      acc[m.name] = 0;
+      return acc;
+    }, {}),
     splitType: "even",
-    shares: {},
+    shares: loaderData.members.reduce<Record<string, number>>((acc, m) => {
+      acc[m.name] = 0;
+      return acc;
+    }, {}),
     note: "",
     category: "",
   });
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fakeMembers = mockMembers;
-    setMembers(fakeMembers);
-    setForm((prev) => ({
-      ...prev,
-      payers: fakeMembers.reduce(
-        (acc, member) => ({ ...acc, [member]: 0 }),
-        {}
-      ),
-      shares: fakeMembers.reduce(
-        (acc, member) => ({ ...acc, [member]: 0 }),
-        {}
-      ),
-    }));
-  }, [mockMembers]);
 
   const handleSave = async () => {
     if (!form.description || !form.total) {
@@ -58,13 +51,13 @@ function AddExpense() {
       (sum: number, amount) => sum + Number(amount),
       0
     );
-    const totalShared = Object.values(form.shares).reduce(
-      (sum: number, amount) => sum + Number(amount),
-      0
-    );
-    console.log("form.total", form);
-    console.log("totalPaid", totalPaid);
-    console.log("totalShared", totalShared);
+    const totalShared =
+      form.splitType === "even"
+        ? totalPaid
+        : Object.values(form.shares).reduce(
+            (sum: number, amount) => sum + Number(amount),
+            0
+          );
     if (
       totalPaid !== Number(form.total) ||
       totalShared !== Number(form.total)
@@ -73,31 +66,90 @@ function AddExpense() {
       return;
     }
 
-    const payload = {
-      event_id: eventId,
-      description: form.description,
-      total: Number(form.total),
-      payers: Object.entries(form.payers).map(([member, amount]) => ({
-        member_name: member,
-        amount,
-      })),
-      shares: Object.entries(form.shares).map(([member, amount]) => ({
-        member_name: member,
-        amount,
-      })),
-      note: form.note || null,
-      category: form.category || null,
-    };
+    try {
+      // 1. 取得 eventId
+      const eventId = loaderData.eventId;
+      if (!eventId) {
+        setError("找不到 eventId");
+        return;
+      }
 
-    console.log("📝 模擬儲存資料:", payload);
-    navigate(`/events/${eventId}`);
+      // 2. categoryId
+      let categoryId = null;
+      if (form.category) {
+        const cat = loaderData.categories.find((c) => c.name === form.category);
+        if (cat) categoryId = cat.id;
+      }
+
+      // 3. payers/shares userId
+      const getUserIdByName = (name: string) => {
+        const member = loaderData.members.find((m) => m.name === name);
+        return member ? member.firebase_uid : null;
+      };
+
+      const payers = Object.entries(form.payers)
+        .filter(([_, amount]) => Number(amount) > 0)
+        .map(([name, amount]) => ({
+          userId: getUserIdByName(name),
+          name,
+          amount: Number(amount),
+        }));
+
+      console.log(form.shares);
+
+      const shares = Object.entries(form.shares).map(([name, amount]) => ({
+        userId: getUserIdByName(name),
+        name,
+        amount:
+          form.splitType === "even"
+            ? Number(form.total) / loaderData.members.length
+            : Number(amount),
+      }));
+      console.log("shares", shares);
+
+      // 4. 取得 idToken
+      const { auth } = await import("~/lib/firebase");
+      const user = auth.currentUser;
+      if (!user) {
+        setError("尚未登入");
+        return;
+      }
+      const idToken = await user.getIdToken();
+      const { default: axiosInstance } = await import("~/lib/axios");
+
+      // 5. API 請求
+      const now = new Date().toISOString();
+      const apiPayload = {
+        eventId,
+        description: form.description,
+        total: Number(form.total),
+        categoryId,
+        payers,
+        shares,
+        note: form.note || null,
+        createdAt: now,
+      };
+      await axiosInstance.post("/expenses", apiPayload, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      // 成功後導頁（回事件頁）
+      navigate(`/events/${eventId}`);
+    } catch (error: any) {
+      setError(
+        error?.response?.data?.message ||
+          error.message ||
+          "新增費用失敗，請稍後再試"
+      );
+    }
   };
 
   const handleCancel = () => {
     navigate(-1);
   };
 
-  const handleSplitChange = (value) => {
+  const handleSplitChange = (value: "even" | "custom") => {
     setForm((prev) => {
       const total = Number(prev.total) || 0;
       const shareAmount = total / members.length;
@@ -221,14 +273,17 @@ function AddExpense() {
           </Label>
           <Select
             onValueChange={(value) => setForm({ ...form, category: value })}
+            value={form.category}
           >
             <SelectTrigger className="mt-1 w-full h-10 border-[#D1D5DB] rounded-md bg-white text-black">
               <SelectValue placeholder="選擇類別" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="餐費">餐費</SelectItem>
-              <SelectItem value="交通">交通</SelectItem>
-              <SelectItem value="住宿">住宿</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.name}>
+                  {cat.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

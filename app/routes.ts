@@ -11,7 +11,7 @@ export default [
     index("routes/personalDashboard.tsx"),
     route("createEvent", "routes/createEvent.tsx"),
     route("events/:id", "routes/eventDashboard.tsx"),
-    route("addExpense", "routes/addExpense.tsx"),
+    route("addExpense/:id", "routes/addExpense.tsx"),
     route("expenseDetails/:id", "routes/expenseDetail.tsx"),
     route("debtRelationship", "routes/debtRelationship.tsx"),
   ]),

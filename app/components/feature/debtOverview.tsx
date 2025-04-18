@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axiosInstance from "~/lib/axios";
+import { auth } from "~/lib/firebase";
 import { Button } from "~/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,10 +23,10 @@ interface Debt {
 
 interface DebtOverviewProps {
   debts: Debt[];
-  onMarkPaid: (id: number) => void;
+  onPaidSuccess?: () => void; // 可選 callback，API 成功後呼叫
 }
 
-const DebtOverview = ({ debts, onMarkPaid }: DebtOverviewProps) => {
+const DebtOverview = ({ debts, onPaidSuccess }: DebtOverviewProps) => {
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     debtId: number | null;
@@ -37,9 +39,28 @@ const DebtOverview = ({ debts, onMarkPaid }: DebtOverviewProps) => {
     setConfirmDialog({ isOpen: true, debtId: id });
   };
 
-  const handleConfirmPayment = () => {
-    if (confirmDialog.debtId) {
-      onMarkPaid(confirmDialog.debtId);
+  // 串接 API 標記已付
+  const handleConfirmPayment = async () => {
+    if (!confirmDialog.debtId) {
+      setConfirmDialog({ isOpen: false, debtId: null });
+      return;
+    }
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("尚未登入");
+      const idToken = await user.getIdToken();
+      await axiosInstance.post(
+        `/settlement/debts/${confirmDialog.debtId}/mark-paid`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        }
+      );
+      if (onPaidSuccess) onPaidSuccess();
+    } catch (err) {
+      alert("標記失敗，請稍後再試。");
     }
     setConfirmDialog({ isOpen: false, debtId: null });
   };
@@ -91,8 +112,9 @@ const DebtOverview = ({ debts, onMarkPaid }: DebtOverviewProps) => {
                       <Button
                         className="w-[72px] h-[28px] text-xs bg-[#00C4CC] text-white rounded"
                         onClick={() => handleMarkPaid(d.id)}
+                        disabled={d.paid}
                       >
-                        標記已付
+                        {d.paid ? "已還款" : "標記已付"}
                       </Button>
                     </div>
                   </div>

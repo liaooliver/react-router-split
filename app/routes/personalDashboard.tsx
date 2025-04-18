@@ -19,7 +19,7 @@ export function meta({}: Route.MetaArgs) {
 
 const PersonalDashboard = () => {
   // 1. 所有 hooks 一律放最上面
-  const { currentUser } = useAuth();
+  const { currentUser, logOut } = useAuth();
   const [dashboardData, setDashboardData] =
     useState<DashboardDataInterface | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,9 +31,10 @@ const PersonalDashboard = () => {
       setError(null);
       try {
         const data = await fetchProtectedDashboardData();
+        console.log(data);
         setDashboardData(data.data);
       } catch (err: any) {
-        setError(err?.error || err?.message || "獲取資料失敗");
+        logOut();
       } finally {
         setLoading(false);
       }
