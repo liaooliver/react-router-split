@@ -88,20 +88,20 @@ const PersonalDashboard = () => {
       {/* 欠款與應得 */}
       <div className="flex justify-evenly text-center bg-white p-4 border rounded-xl">
         <div>
-          <p className="text-sm text-[#71717A]">總欠款</p>
+          <p className="text-sm text-[#71717A]">待收欠款</p>
           <p className="text-[20px] font-semibold text-[#EF4444]">
             ${unpaidDebtsTotal}
           </p>
         </div>
-        <div>
+        {/* <div>
           <p className="text-sm text-[#71717A]">總應得</p>
           <p className="text-[20px] font-semibold text-[#10B981]">
             ${balanceTotal}
           </p>
-        </div>
+        </div> */}
       </div>
       {/* 最近活躍事件 */}
-      <div>
+      {/* <div>
         <h2 className="text-md font-medium text-[#263238] mb-2">
           最近 2 個活躍事件
         </h2>
@@ -115,20 +115,13 @@ const PersonalDashboard = () => {
             </Card>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* 事件列表 */}
       <EventList events={events} />
       {/* 債務概覽 */}
-      <DebtOverview debts={debts} onMarkPaid={handleMarkPaid} />
-      <div className="text-right">
-        <a
-          href="/debtRelationship"
-          className="text-sm text-[#00C4CC] font-medium"
-        >
-          查看更多 →
-        </a>
-      </div>
+      <DebtOverview debts={debts} />
+
       {/* 創建事件按鈕 */}
       <Link to="/createEvent">
         <Button className="fixed bottom-8 right-8 bg-[#FF5733] text-white rounded-full w-12 h-12 p-0">

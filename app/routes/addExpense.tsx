@@ -95,8 +95,6 @@ function AddExpense({ loaderData }: Route.ComponentProps) {
           amount: Number(amount),
         }));
 
-      console.log(form.shares);
-
       const shares = Object.entries(form.shares).map(([name, amount]) => ({
         userId: getUserIdByName(name),
         name,

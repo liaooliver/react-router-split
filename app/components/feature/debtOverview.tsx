@@ -65,7 +65,7 @@ const DebtOverview = ({ debts, onPaidSuccess }: DebtOverviewProps) => {
     <>
       <div>
         <h2 className="text-md font-medium text-[#263238] mb-3">分帳關係</h2>
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[500px] overflow-auto">
           <AnimatePresence>
             {debts.length > 0 ? (
               debts.map((d) => (

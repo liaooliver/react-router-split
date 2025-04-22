@@ -16,6 +16,7 @@ export interface ExpenseInterface {
 }
 
 import type { EventStatus } from "../constants/status";
+import type { DebtInterface } from "./eventDashboard";
 
 export interface EventInterface {
   id: number;
@@ -25,15 +26,6 @@ export interface EventInterface {
   date: string; // 格式: YYYY/M/D
   members: MemberInterface[];
   expenses: ExpenseInterface[];
-}
-
-export interface DebtInterface {
-  id: number;
-  from: string;
-  to: string;
-  amount: number;
-  event: string;
-  paid: boolean;
 }
 
 export interface DebtOverviewInterface {

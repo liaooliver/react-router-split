@@ -76,7 +76,7 @@ const EventList = ({ events }: EventListProps) => {
                     筆費用
                   </p>
                   <p className="text-sm text-gray-600 mt-1">
-                    淨餘額：
+                    累積費用：
                     <span
                       className={
                         event.balance >= 0 ? "text-[#10B981]" : "text-[#EF4444]"

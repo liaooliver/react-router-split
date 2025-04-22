@@ -143,6 +143,25 @@ const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
     // TODO: 呼叫 API 並重新取得 event 資料
   };
 
+  const handleDeleteExpense = async (expenseId: number) => {
+    try {
+      setErrorMessage("");
+      const user = auth.currentUser;
+      if (!user) throw new Error("尚未登入");
+      const idToken = await user.getIdToken();
+      await axiosInstance.delete(`/expenses/${expenseId}`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      await refreshEventDetail();
+    } catch (error: any) {
+      setErrorMessage(
+        error?.response?.data?.message || error.message || "刪除費用失敗"
+      );
+    }
+  };
+
   const handleSettleEvent = async () => {
     // 檢查餘額總和是否為0
     const totalBalance: number =
@@ -423,7 +442,11 @@ const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
                               <Pencil className="w-4 h-4 text-[#00C4CC]" />
                             </Button>
                           </Link>
-                          <Button variant="ghost" size="icon">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteExpense(exp.id)}
+                          >
                             <Trash2 className="w-4 h-4 text-red-500" />
                           </Button>
                         </div>
