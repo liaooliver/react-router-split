@@ -55,78 +55,6 @@ import type {
 import type { Route } from "../+types/root";
 import { isAuth } from "~/services/auth";
 
-// 債務關係組件
-const RenderDebts = ({
-  debts,
-  onMarkAsPaid,
-}: {
-  debts: DebtInterface[];
-  onMarkAsPaid: (debtId: number) => void;
-}) => {
-  return (
-    <div className="space-y-2">
-      {debts.map((debt) => (
-        <Accordion type="single" collapsible key={debt.id}>
-          <AccordionItem
-            value={`debt-${debt.id}`}
-            className="border border-[#D1D5DB] rounded-lg overflow-hidden"
-          >
-            <AccordionTrigger className="px-4 py-2 hover:no-underline">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-black">{debt.toUserName}</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-medium text-red-500">
-                    ${debt.amount.toFixed(2)}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-black">
-                    {debt.fromUserName}
-                  </span>
-                </div>
-                {debt.paid ? (
-                  <span className="px-3 py-1 text-xs font-medium text-white bg-green-500 rounded-md">
-                    已還款
-                  </span>
-                ) : null}
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pt-0 pb-2">
-              {!debt.paid && (
-                <Button
-                  size="sm"
-                  className="mb-2 px-3 py-1 text-xs font-medium text-white bg-[#00C4CC] hover:bg-[#00B0B6] rounded-md"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMarkAsPaid(debt.id);
-                  }}
-                >
-                  標記已付
-                </Button>
-              )}
-              <div className="pl-6 space-y-2">
-                {debt.relatedExpenses.map((exp) => (
-                  <div key={exp.id} className="flex justify-between text-sm">
-                    <div>
-                      <span className="text-[#263238]">{exp.title}</span>
-                      <span className="text-gray-400 ml-2 text-xs">
-                        {exp.date}
-                      </span>
-                    </div>
-                    <span className="text-red-500 font-medium">
-                      ${exp.amount.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      ))}
-    </div>
-  );
-};
-
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const isLogged = await isAuth();
   if (!isLogged) {
@@ -135,7 +63,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const eventId = params.id;
   try {
     const data = await fetchProtectedEventDetail(eventId!);
-    console.log("data", data);
     return { event: data.data };
   } catch (err: any) {
     throw new Response(err.message || "資料載入失敗", { status: 500 });
@@ -274,7 +201,7 @@ const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
                 <span className="text-xs mt-1 text-black">新增</span>
               </div>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] bg-white text-black">
               <DialogHeader>
                 <DialogTitle>新增成員</DialogTitle>
               </DialogHeader>
@@ -300,6 +227,7 @@ const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
               <DialogFooter>
                 <Button
                   variant="outline"
+                  className="w-20 h-10 border-[#D1D5DB] rounded-md bg-muted text-muted-foreground hover:bg-muted/90"
                   onClick={() => {
                     setAddMemberDialogOpen(false);
                     setShowError(false);
@@ -311,7 +239,7 @@ const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
                 <Button
                   onClick={handleAddMember}
                   disabled={!newMemberName.trim()}
-                  className="bg-[#0066CC] text-white hover:bg-[#0052A3]"
+                  className="w-20 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   添加
                 </Button>
@@ -433,7 +361,7 @@ const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
             <p className="text-base font-medium text-green-500">已結算</p>
           )}
           {event.status === "finalized" && (
-            <p className="text-base font-medium text-yellow-500">已結案</p>
+            <p className="text-base font-medium text-yellow-500">已結束</p>
           )}
           <Button
             variant="outline"

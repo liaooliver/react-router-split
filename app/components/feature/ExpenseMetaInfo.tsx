@@ -12,14 +12,6 @@ export function ExpenseMetaInfo({ expense }: ExpenseMetaInfoProps) {
     percentage: "依比例分攤",
   };
 
-  const categoryText = {
-    food: "餐飲",
-    transportation: "交通",
-    entertainment: "娛樂",
-    shopping: "購物",
-    other: "其他",
-  };
-
   return (
     <div className="space-y-6">
       {/* 分攤方式 */}
@@ -44,9 +36,7 @@ export function ExpenseMetaInfo({ expense }: ExpenseMetaInfoProps) {
       {/* 類別 */}
       <div>
         <div className="text-sm font-medium text-gray-800">類別</div>
-        <div className="pl-2 pt-2 text-gray-700">
-          {categoryText[expense.category]}
-        </div>
+        <div className="pl-2 pt-2 text-gray-700">{expense.category}</div>
       </div>
     </div>
   );

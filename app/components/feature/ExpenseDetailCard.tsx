@@ -17,18 +17,6 @@ export function ExpenseDetailCard({ expense }: ExpenseDetailCardProps) {
           ${expense.amount.toFixed(2)}
         </div>
         <div className="text-sm text-gray-500">{expense.date}</div>
-        {!expense.isSettled && (
-          <div className="flex items-center gap-1 text-orange-700 text-sm pt-2">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>尚未結算</span>
-          </div>
-        )}
-        {expense.isSettled && (
-          <div className="flex items-center gap-1 text-green-600 text-sm pt-2">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>已結算</span>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

@@ -30,7 +30,6 @@ export interface Expense {
   payers: PaymentShare[];
   shares: ExpenseShare[];
   note?: string;
-  isSettled: boolean;
   eventId?: string;
 }
 

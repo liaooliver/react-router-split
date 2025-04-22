@@ -31,7 +31,7 @@ const DebtRelationshipPage = () => {
   return (
     <AnimatedPageContainer>
       <PageHeader title="分帳關係" />
-      <DebtOverview debts={debts} onMarkPaid={handleMarkPaid} />
+      <DebtOverview debts={debts} />
     </AnimatedPageContainer>
   );
 };

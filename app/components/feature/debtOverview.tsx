@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axiosInstance from "~/lib/axios";
 import { auth } from "~/lib/firebase";
 import { Button } from "~/components/ui/button";
@@ -11,18 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-
-interface Debt {
-  id: number;
-  from: string;
-  to: string;
-  amount: number;
-  event: string;
-  paid: boolean;
-}
+import type { DebtInterface } from "~/types/eventDashboard";
 
 interface DebtOverviewProps {
-  debts: Debt[];
+  debts: DebtInterface[];
   onPaidSuccess?: () => void; // 可選 callback，API 成功後呼叫
 }
 
@@ -33,6 +25,10 @@ const DebtOverview = ({ debts, onPaidSuccess }: DebtOverviewProps) => {
   }>({
     isOpen: false,
     debtId: null,
+  });
+
+  useEffect(() => {
+    console.log(debts);
   });
 
   const handleMarkPaid = (id: number) => {
@@ -86,7 +82,9 @@ const DebtOverview = ({ debts, onPaidSuccess }: DebtOverviewProps) => {
                       {/* From User */}
                       <div className="flex items-center">
                         <div className="w-8 h-8 rounded-full bg-gray-200 mr-2" />
-                        <span className="text-sm text-[#263238]">{d.from}</span>
+                        <span className="text-sm text-[#263238]">
+                          {d.fromUserName}
+                        </span>
                       </div>
 
                       {/* Transfer Arrow and Amount */}
@@ -100,14 +98,16 @@ const DebtOverview = ({ debts, onPaidSuccess }: DebtOverviewProps) => {
                       {/* To User */}
                       <div className="flex items-center">
                         <div className="w-8 h-8 rounded-full bg-gray-200 mr-2" />
-                        <span className="text-sm text-[#263238]">{d.to}</span>
+                        <span className="text-sm text-[#263238]">
+                          {d.toUserName}
+                        </span>
                       </div>
                     </div>
 
                     {/* Bottom Row - Event and Button */}
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-400">
-                        （來自 {d.event}）
+                        {/* （來自 {d.}） */}
                       </span>
                       <Button
                         className="w-[72px] h-[28px] text-xs bg-[#00C4CC] text-white rounded"
@@ -144,11 +144,17 @@ const DebtOverview = ({ debts, onPaidSuccess }: DebtOverviewProps) => {
                     <div className="mt-2 p-3 bg-gray-50 rounded-md">
                       <p>
                         付款人：
-                        {debts.find((d) => d.id === confirmDialog.debtId)?.from}
+                        {
+                          debts.find((d) => d.id === confirmDialog.debtId)
+                            ?.fromUserName
+                        }
                       </p>
                       <p>
                         收款人：
-                        {debts.find((d) => d.id === confirmDialog.debtId)?.to}
+                        {
+                          debts.find((d) => d.id === confirmDialog.debtId)
+                            ?.toUserName
+                        }
                       </p>
                       <p>
                         金額：$
@@ -157,13 +163,13 @@ const DebtOverview = ({ debts, onPaidSuccess }: DebtOverviewProps) => {
                             ?.amount
                         }
                       </p>
-                      <p>
+                      {/* <p>
                         來自：
                         {
                           debts.find((d) => d.id === confirmDialog.debtId)
                             ?.event
                         }
-                      </p>
+                      </p> */}
                     </div>
                   </>
                 )}

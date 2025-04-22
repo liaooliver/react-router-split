@@ -8,72 +8,54 @@ const GradientBackground = () => (
   <div className="absolute top-0 left-0 w-full h-full z-0">
     <div className="w-full h-full bg-gradient-custom" />
     <svg
-      className="absolute top-0 left-0 w-full h-full opacity-20"
+      className="absolute top-0 left-0 w-full h-full opacity-30"
       viewBox="0 0 100 100"
       preserveAspectRatio="xMidYMid slice"
     >
-      {/* 中心主要元素 */}
+      {/* 銀河中心星雲暈染 */}
+      <radialGradient id="galaxy-core" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor={appDesignTokens.primary} stopOpacity="0.5" />
+        <stop offset="60%" stopColor={appDesignTokens.accent} stopOpacity="0.2" />
+        <stop offset="100%" stopColor={appDesignTokens.secondary} stopOpacity="0" />
+      </radialGradient>
+      <ellipse cx="50" cy="50" rx="18" ry="10" fill="url(#galaxy-core)" />
+      {/* 中心黑洞 */}
       <circle cx="50" cy="50" r="2.5" fill={appDesignTokens.primary} />
 
-      {/* 左側元素群組 */}
-      <circle cx="30" cy="50" r="1.5" fill={appDesignTokens.accent} />
-      <circle cx="10" cy="50" r="1" fill={appDesignTokens.secondary} />
-      <circle cx="20" cy="30" r="1.2" fill={appDesignTokens.primary} />
-      <circle cx="15" cy="70" r="0.8" fill={appDesignTokens.accent} />
+      {/* 螺旋臂（以多條半透明曲線表現） */}
+      <g opacity="0.5">
+        <path d="M50,50 Q70,40 90,60" stroke={appDesignTokens.accent} strokeWidth="1.2" fill="none" />
+        <path d="M50,50 Q30,60 10,40" stroke={appDesignTokens.secondary} strokeWidth="1.2" fill="none" />
+        <path d="M50,50 Q80,20 95,35" stroke={appDesignTokens.primary} strokeWidth="0.7" fill="none" />
+        <path d="M50,50 Q20,20 5,65" stroke={appDesignTokens.accent} strokeWidth="0.7" fill="none" />
+        <path d="M50,50 Q80,80 95,65" stroke={appDesignTokens.secondary} strokeWidth="0.6" fill="none" />
+        <path d="M50,50 Q20,80 5,35" stroke={appDesignTokens.primary} strokeWidth="0.6" fill="none" />
+      </g>
 
-      {/* 右側元素群組 */}
-      <circle cx="70" cy="50" r="1.5" fill={appDesignTokens.accent} />
-      <circle cx="90" cy="50" r="1" fill={appDesignTokens.secondary} />
-      <circle cx="80" cy="30" r="1.2" fill={appDesignTokens.primary} />
-      <circle cx="85" cy="70" r="0.8" fill={appDesignTokens.accent} />
-
-      {/* 上方元素群組 */}
-      <circle cx="50" cy="20" r="1.8" fill={appDesignTokens.accent} />
-      <circle cx="30" cy="25" r="1.2" fill={appDesignTokens.secondary} />
-      <circle cx="70" cy="25" r="1.2" fill={appDesignTokens.primary} />
-      <circle cx="40" cy="15" r="0.9" fill={appDesignTokens.secondary} />
-      <circle cx="60" cy="15" r="0.9" fill={appDesignTokens.accent} />
-
-      {/* 下方元素群組 */}
-      <circle cx="50" cy="80" r="1.8" fill={appDesignTokens.secondary} />
-      <circle cx="30" cy="75" r="1.2" fill={appDesignTokens.primary} />
-      <circle cx="70" cy="75" r="1.2" fill={appDesignTokens.accent} />
-      <circle cx="40" cy="85" r="0.9" fill={appDesignTokens.primary} />
-      <circle cx="60" cy="85" r="0.9" fill={appDesignTokens.secondary} />
-
-      {/* 裝飾線條 */}
-      <path
-        d="M20,50 Q35,50 40,50"
-        stroke={appDesignTokens.secondary}
-        strokeWidth="0.2"
-        fill="none"
-      />
-      <path
-        d="M60,50 Q75,50 80,50"
-        stroke={appDesignTokens.accent}
-        strokeWidth="0.2"
-        fill="none"
-      />
-      <path
-        d="M50,30 Q50,40 50,45"
-        stroke={appDesignTokens.primary}
-        strokeWidth="0.2"
-        fill="none"
-      />
-      <path
-        d="M50,55 Q50,65 50,70"
-        stroke={appDesignTokens.accent}
-        strokeWidth="0.2"
-        fill="none"
-      />
-
-      {/* 散布的小點 */}
-      <circle cx="25" cy="35" r="0.4" fill={appDesignTokens.primary} />
-      <circle cx="75" cy="35" r="0.4" fill={appDesignTokens.secondary} />
-      <circle cx="25" cy="65" r="0.4" fill={appDesignTokens.accent} />
-      <circle cx="75" cy="65" r="0.4" fill={appDesignTokens.primary} />
-      <circle cx="45" cy="25" r="0.4" fill={appDesignTokens.accent} />
-      <circle cx="55" cy="75" r="0.4" fill={appDesignTokens.secondary} />
+      {/* 星點（隨機分布，大小、顏色不一，模擬銀河星海） */}
+      <g>
+        <circle cx="20" cy="30" r="0.7" fill={appDesignTokens.primary} />
+        <circle cx="80" cy="20" r="0.5" fill={appDesignTokens.secondary} />
+        <circle cx="15" cy="80" r="0.3" fill={appDesignTokens.accent} />
+        <circle cx="60" cy="10" r="0.6" fill={appDesignTokens.primary} />
+        <circle cx="85" cy="85" r="0.4" fill={appDesignTokens.secondary} />
+        <circle cx="40" cy="65" r="0.5" fill={appDesignTokens.accent} />
+        <circle cx="70" cy="70" r="0.8" fill={appDesignTokens.primary} />
+        <circle cx="55" cy="80" r="0.3" fill={appDesignTokens.secondary} />
+        <circle cx="25" cy="55" r="0.4" fill={appDesignTokens.accent} />
+        <circle cx="75" cy="45" r="0.5" fill={appDesignTokens.primary} />
+        <circle cx="30" cy="20" r="0.3" fill={appDesignTokens.secondary} />
+        <circle cx="68" cy="35" r="0.4" fill={appDesignTokens.accent} />
+        <circle cx="45" cy="25" r="0.2" fill={appDesignTokens.primary} />
+        <circle cx="60" cy="75" r="0.3" fill={appDesignTokens.secondary} />
+        <circle cx="90" cy="55" r="0.4" fill={appDesignTokens.accent} />
+        <circle cx="10" cy="45" r="0.2" fill={appDesignTokens.primary} />
+        <circle cx="50" cy="15" r="0.3" fill={appDesignTokens.accent} />
+      </g>
+      {/* 星雲暈染（淡色橢圓） */}
+      <ellipse cx="70" cy="30" rx="6" ry="2.5" fill={appDesignTokens.accent} opacity="0.09" />
+      <ellipse cx="30" cy="70" rx="7" ry="3" fill={appDesignTokens.secondary} opacity="0.07" />
+      <ellipse cx="80" cy="80" rx="10" ry="4" fill={appDesignTokens.primary} opacity="0.05" />
     </svg>
   </div>
 );

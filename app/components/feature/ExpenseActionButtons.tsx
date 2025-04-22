@@ -10,13 +10,11 @@ import {
 import { useState } from "react";
 
 interface ExpenseActionButtonsProps {
-  isSettled: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }
 
 export function ExpenseActionButtons({
-  isSettled,
   onEdit,
   onDelete,
 }: ExpenseActionButtonsProps) {
@@ -33,7 +31,7 @@ export function ExpenseActionButtons({
 
   return (
     <>
-      {!isSettled && (
+      {
         <div className="flex justify-between pt-4">
           <Button
             onClick={onEdit}
@@ -73,7 +71,7 @@ export function ExpenseActionButtons({
             </AlertDialogContent>
           </AlertDialog>
         </div>
-      )}
+      }
     </>
   );
 }
