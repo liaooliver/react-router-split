@@ -1,4 +1,4 @@
-import type { Category } from "../services/fetchCategories";
+import type { Category } from "~/services/fetchCategories";
 
 export namespace Route {
   export interface LoaderData {

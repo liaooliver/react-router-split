@@ -30,7 +30,7 @@ export interface Expense {
   payers: PaymentShare[];
   shares: ExpenseShare[];
   note?: string;
-  eventId?: string;
+  eventId?: number;
 }
 
 export interface ExpenseFormData {

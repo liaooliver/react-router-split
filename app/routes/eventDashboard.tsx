@@ -1,19 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router";
+import { useState } from "react";
 import { fetchProtectedEventDetail } from "~/services/fetchProtectedEventDetail";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { ScrollArea } from "~/components/ui/scroll-area";
-import {
-  Pencil,
-  Trash2,
-  ChevronRight,
-  UserPlus,
-  X,
-  Plus,
-  AlertTriangle,
-} from "lucide-react";
+import { Pencil, Trash2, X, Plus, AlertTriangle } from "lucide-react";
 import { Link } from "react-router";
 import {
   Dialog,
@@ -23,12 +13,6 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "~/components/ui/accordion";
 import { Input } from "~/components/ui/input";
 import { PageHeader } from "~/components/common/PageHeader";
 import { AnimatedPageContainer } from "~/components/common/AnimatedPageContainer";
@@ -48,76 +32,86 @@ import LoadingSpinner from "~/components/common/LoadingSpinner";
 import axiosInstance from "~/lib/axios";
 import { auth } from "~/lib/firebase";
 import DebtOverview from "~/components/feature/debtOverview";
-import type {
-  DebtInterface,
-  EventDetailInterface,
-} from "~/types/eventDashboard";
 import type { Route } from "../+types/root";
-import { isAuth } from "~/services/auth";
+import { isDuplicateMemberName } from "../utils/member";
+import {
+  addExistingUserToEvent,
+  registerAndAddNewUser,
+} from "../services/memberActions";
+import {
+  ERROR_EMAIL_REQUIRED,
+  ERROR_NAME_DUPLICATE,
+  ERROR_EMAIL_CHECK,
+} from "../constants/member";
+import { fetchEmailExists } from "~/services/fetchProtectedData";
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
-  const isLogged = await isAuth();
-  if (!isLogged) {
-    throw new Response("未登入", { status: 401 });
-  }
-  const eventId = params.id;
-  try {
-    const data = await fetchProtectedEventDetail(eventId!);
-    return { event: data.data };
-  } catch (err: any) {
-    throw new Response(err.message || "資料載入失敗", { status: 500 });
-  }
-}
+import { clientLoader } from "./eventDashboard.clientLoader";
+export { clientLoader };
 
 const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
   const [event, setEvent] = useState(loaderData.event);
-
-  // UI互動相關本地狀態
   const [showExpenses, setShowExpenses] = useState(false);
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const [removeConfirmMemberId, setRemoveConfirmMemberId] = useState<
     string | null
   >(null);
   const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberEmail, setNewMemberEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showError, setShowError] = useState(false);
 
-  // 檢查成員是否重複
-  const isNameDuplicate = (name: string) => {
-    return event?.members.some(
-      (member) => member.name.toLowerCase() === name.toLowerCase()
-    );
-  };
-
-  // 處理新增成員
-  const handleAddMember = () => {
-    if (!newMemberName.trim()) {
-      setErrorMessage("請輸入成員名稱");
-      setShowError(true);
-      return;
-    }
-
-    if (isNameDuplicate(newMemberName.trim())) {
-      setErrorMessage("此成員名稱已存在");
-      setShowError(true);
-      return;
-    }
-
-    const newMember = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newMemberName.trim(),
-      avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
-    };
-
-    // 這裡應呼叫 API 新增成員，然後 revalidate 或重新導向
-    // setEvent((prev) => ({
-    //   ...prev,
-    //   members: [...prev.members, newMember],
-    // }));
+  // 清空 Dialog 狀態
+  function clearMemberDialogInput() {
+    setNewMemberEmail("");
     setNewMemberName("");
     setAddMemberDialogOpen(false);
     setShowError(false);
-    // TODO: 呼叫 API 並重新取得 event 資料
+  }
+
+  /**
+   * 新增成員主流程
+   */
+  const handleAddMember = async () => {
+    if (!newMemberEmail.trim()) {
+      setErrorMessage("請輸入 Email");
+      setErrorMessage(ERROR_EMAIL_REQUIRED);
+      setShowError(true);
+      return;
+    }
+    if (
+      newMemberName.trim() &&
+      isDuplicateMemberName(newMemberName.trim(), event.members)
+    ) {
+      setErrorMessage(ERROR_NAME_DUPLICATE);
+      setShowError(true);
+      return;
+    }
+    try {
+      const emailExistsResult = await fetchEmailExists(newMemberEmail);
+      if (emailExistsResult.exist) {
+        await addExistingUserToEvent({
+          userId: emailExistsResult.exists.firebase_uid,
+          eventId: event.eventId,
+          clearInput: clearMemberDialogInput,
+          refreshEventDetail,
+          setErrorMessage,
+          setShowError,
+        });
+        return;
+      }
+      await registerAndAddNewUser({
+        email: newMemberEmail,
+        name: newMemberName,
+        eventId: event.eventId,
+        clearInput: clearMemberDialogInput,
+        refreshEventDetail,
+        setErrorMessage,
+        setShowError,
+      });
+    } catch (err: any) {
+      setErrorMessage(ERROR_EMAIL_CHECK + (err?.message || ""));
+      setShowError(true);
+    }
   };
 
   // 檢查成員是否可以被刪除
@@ -205,137 +199,141 @@ const EventDashboard = ({ loaderData }: Route.ComponentProps) => {
   // 成員列表渲染函數
   const renderMemberAvatars = () => {
     return (
-      <ScrollArea className="w-full">
-        <div className="flex p-3 bg-white border border-[#D1D5DB] rounded-lg">
-          {/* 新增成員按鈕 */}
-          <Dialog
-            open={addMemberDialogOpen}
-            onOpenChange={setAddMemberDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <div className="flex flex-col items-center mr-4">
-                <div className="w-10 h-10 bg-[#0066CC] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#0052A3] transition-colors">
-                  <Plus className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xs mt-1 text-black">新增</span>
+      <div className="w-full flex p-3 bg-white border border-[#D1D5DB] rounded-lg overflow-scroll">
+        {/* 新增成員按鈕 */}
+        <Dialog
+          open={addMemberDialogOpen}
+          onOpenChange={setAddMemberDialogOpen}
+        >
+          <DialogTrigger asChild>
+            <div className="flex flex-col items-center mr-4">
+              <div className="w-10 h-10 bg-[#0066CC] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#0052A3] transition-colors">
+                <Plus className="h-5 w-5 text-white" />
               </div>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-white text-black">
-              <DialogHeader>
-                <DialogTitle>新增成員</DialogTitle>
-              </DialogHeader>
-              <div className="py-4">
-                {showError && (
-                  <div className="flex items-center space-x-2 mb-2 p-2 bg-red-50 rounded text-red-600 text-sm">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span>{errorMessage}</span>
-                  </div>
-                )}
-                <Input
-                  placeholder="輸入成員名稱"
-                  value={newMemberName}
-                  onChange={(e) => setNewMemberName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleAddMember();
-                    }
-                  }}
-                />
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  className="w-20 h-10 border-[#D1D5DB] rounded-md bg-muted text-muted-foreground hover:bg-muted/90"
-                  onClick={() => {
-                    setAddMemberDialogOpen(false);
-                    setShowError(false);
-                    setNewMemberName("");
-                  }}
-                >
-                  取消
-                </Button>
-                <Button
-                  onClick={handleAddMember}
-                  disabled={!newMemberName.trim()}
-                  className="w-20 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  添加
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          {/* 分隔線 */}
-          {loaderData.event.members.length > 0 && (
-            <div className="h-10 w-px bg-[#D1D5DB] mx-2"></div>
-          )}
-          {/* 成員頭像列表 */}
-          {loaderData.event.members.map((member) => (
-            <div
-              key={member.id}
-              className="flex flex-col items-center mx-2 relative group"
-            >
-              <Avatar className="w-10 h-10 border-2 border-transparent group-hover:border-[#0066CC] transition-colors">
-                <AvatarImage src={member.avatar} alt={member.name} />
-                <AvatarFallback className="bg-[#F3F4F6]">
-                  {member.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-xs mt-1 text-black">{member.name}</span>
-
-              {/* 刪除按鈕 */}
-              <AlertDialog
-                open={removeConfirmMemberId === member.id}
-                onOpenChange={(open) => !open && setRemoveConfirmMemberId(null)}
-              >
-                <AlertDialogTrigger asChild>
-                  <button
-                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    onClick={() => setRemoveConfirmMemberId(member.id)}
-                  >
-                    <X className="h-3 w-3 text-white" />
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>移除成員</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {showError ? (
-                        <div className="flex items-center space-x-2 text-red-600">
-                          <AlertTriangle className="h-4 w-4" />
-                          <span>{errorMessage}</span>
-                        </div>
-                      ) : (
-                        <>
-                          確定要移除成員 {member.name} 嗎？
-                          <br />
-                          移除後無法恢復，且已參與費用記錄的成員無法移除。
-                        </>
-                      )}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel
-                      onClick={() => {
-                        setShowError(false);
-                        setRemoveConfirmMemberId(null);
-                      }}
-                    >
-                      取消
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="bg-red-500 hover:bg-red-600"
-                    >
-                      確認移除
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <span className="text-xs mt-1 text-black">新增</span>
             </div>
-          ))}
-        </div>
-      </ScrollArea>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px] bg-white text-black">
+            <DialogHeader>
+              <DialogTitle>發送邀請</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              {showError && (
+                <div className="flex items-center space-x-2 mb-2 p-2 bg-red-50 rounded text-red-600 text-sm">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+              <Input
+                placeholder="輸入成員名稱 (選填)"
+                value={newMemberName}
+                onChange={(e) => setNewMemberName(e.target.value)}
+                className="mb-2"
+              />
+              <Input
+                placeholder="輸入 Email"
+                value={newMemberEmail}
+                onChange={(e) => setNewMemberEmail(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAddMember();
+                  }
+                }}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="w-20 h-10 border-[#D1D5DB] rounded-md bg-muted text-muted-foreground hover:bg-muted/90"
+                onClick={() => {
+                  setAddMemberDialogOpen(false);
+                  setShowError(false);
+                  setNewMemberName("");
+                }}
+              >
+                取消
+              </Button>
+              <Button
+                onClick={handleAddMember}
+                disabled={!newMemberName.trim()}
+                className="w-20 h-10 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                添加
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* 分隔線 */}
+        {event.members.length > 0 && (
+          <div className="h-10 w-px bg-[#D1D5DB] mx-2"></div>
+        )}
+        {/* 成員頭像列表 */}
+        {event.members.map((member) => (
+          <div
+            key={member.id}
+            className="flex flex-col items-center mx-2 relative group"
+          >
+            <Avatar className="w-10 h-10 border-2 border-transparent group-hover:border-[#0066CC] transition-colors">
+              <AvatarImage src={member.avatar} alt={member.name} />
+              <AvatarFallback className="bg-[#F3F4F6]">
+                {member.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs mt-1 text-black">{member.name}</span>
+
+            {/* 刪除按鈕 */}
+            <AlertDialog
+              open={removeConfirmMemberId === member.id}
+              onOpenChange={(open) => !open && setRemoveConfirmMemberId(null)}
+            >
+              <AlertDialogTrigger asChild>
+                <button
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  onClick={() => setRemoveConfirmMemberId(member.id)}
+                >
+                  <X className="h-3 w-3 text-white" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>移除成員</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {showError ? (
+                      <div className="flex items-center space-x-2 text-red-600">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span>{errorMessage}</span>
+                      </div>
+                    ) : (
+                      <>
+                        確定要移除成員 {member.name} 嗎？
+                        <br />
+                        移除後無法恢復，且已參與費用記錄的成員無法移除。
+                      </>
+                    )}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    onClick={() => {
+                      setShowError(false);
+                      setRemoveConfirmMemberId(null);
+                    }}
+                  >
+                    取消
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleRemoveMember(member.id)}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    確認移除
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ))}
+      </div>
     );
   };
 

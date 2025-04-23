@@ -60,6 +60,67 @@ export async function fetchProtectedDashboardData(): Promise<DashboardResponseIn
   }
 }
 
+export async function fetchEmailExists(email: string): Promise<any> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("尚未登入");
+  const idToken = await user.getIdToken();
+  try {
+    const response = await axiosInstance.post(
+      "/users/email-exists",
+      {
+        email,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error ||
+          `HTTP error! status: ${error.response?.status}`
+      );
+    }
+    throw error;
+  }
+}
+
+export async function fetchProtectedFindOrCreateUser({
+  email,
+  displayName,
+  uid,
+  idToken,
+}: {
+  email: string;
+  displayName: string;
+  uid: string;
+  idToken: string;
+}) {
+  try {
+    const response = await axiosInstance.post(
+      "/users/find-or-create",
+      { email, displayName, uid },
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.error ||
+          `HTTP error! status: ${error.response?.status}`
+      );
+    }
+    throw error;
+  }
+}
+
 export async function fetchProtectedData() {
   const user = auth.currentUser;
   if (!user) {

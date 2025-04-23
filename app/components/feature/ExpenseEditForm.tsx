@@ -22,9 +22,8 @@ import {
 } from "~/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { type Expense, type ExpenseFormData } from "~/types/expense";
-
-// 模擬成員資料（實際應從 props 或 API 獲取）
-const mockMembers = ["小美", "阿成", "曉明"];
+import { useEventMembers, type EventMember } from "~/hooks/useEventMembers";
+import { useCategories } from "~/hooks/useCategories";
 
 const expenseFormSchema = z.object({
   title: z.string().min(1, "請輸入費用名稱"),
@@ -44,64 +43,93 @@ const expenseFormSchema = z.object({
 
 interface ExpenseEditFormProps {
   expense?: Expense;
+  eventId?: string | number;
   onSubmit: (data: ExpenseFormData) => void;
   onCancel: () => void;
 }
 
 export function ExpenseEditForm({
   expense,
+  eventId,
   onSubmit,
   onCancel,
 }: ExpenseEditFormProps) {
+  // 取得 event 成員
+  const {
+    members,
+    isLoading: isMembersLoading,
+    error: memberError,
+  } = useEventMembers(eventId ? String(eventId) : undefined);
+
+  // 取得類別資料
+  const {
+    categories,
+    isLoading: isCategoriesLoading,
+    error: categoriesError,
+  } = useCategories();
   const [error, setError] = useState("");
-  const [members] = useState(mockMembers);
 
-  const defaultPayers = useMemo(() => {
-    return members.reduce((acc, member) => ({ ...acc, [member]: 0 }), {});
-  }, [members]);
+  // 將 members 轉為名稱陣列（或 id 陣列，根據需求）
+  const memberIds = useMemo(() => members.map((m) => m.id), [members]);
 
-  const defaultShares = useMemo(() => {
-    return members.reduce((acc, member) => ({ ...acc, [member]: 0 }), {});
-  }, [members]);
+  // --- 工具函數: 依 members 產生完整 payers/shares 物件 ---
+  function buildMemberAmountMap(
+    members: EventMember[] = [],
+    arr: { userId: string | number; amount: number }[] = []
+  ) {
+    const map = new Map(arr.map((item) => [String(item.userId), item.amount]));
+
+    return members.reduce((acc, m) => {
+      acc[String(m.id)] = map.get(String(m.firebase_uid)) ?? 0;
+
+      return acc;
+    }, {} as Record<string, number>);
+  }
 
   const form = useForm({
     resolver: zodResolver(expenseFormSchema),
-    defaultValues: expense
-      ? {
-          title: expense.title,
-          amount: expense.amount,
-          date: expense.date,
-          category: expense.category,
-          splitType: "even",
-          note: expense.note || "",
-          payers: defaultPayers,
-          shares: defaultShares,
-        }
-      : {
-          title: "",
-          amount: 0,
-          date: new Date().toISOString().split("T")[0],
-          category: "餐費",
-          splitType: "even",
-          note: "",
-          payers: defaultPayers,
-          shares: defaultShares,
-        },
+    defaultValues: {
+      title: expense?.title || "",
+      amount: expense?.amount || 0,
+      date: expense?.date || new Date().toISOString().split("T")[0],
+      category: expense?.category || "餐費",
+      splitType: expense?.splitMethod === "equal" ? "even" : "manual",
+      note: expense?.note || "",
+      payers: {}, // 先給空物件，等 members 載入後 reset
+      shares: {},
+    },
   });
+
+  // 當 members/cateogries 載入或 expense 變動時，自動 reset defaultValues
+  useEffect(() => {
+    if (!members || members.length === 0) return;
+    form.reset({
+      title: expense?.title || "",
+      amount: expense?.amount || 0,
+      date: expense?.date || new Date().toISOString().split("T")[0],
+      category: expense?.category || "餐費",
+      splitType: expense?.splitMethod === "equal" ? "even" : "manual",
+      note: expense?.note || "",
+      payers: buildMemberAmountMap(members, expense?.payers),
+      shares: buildMemberAmountMap(members, expense?.shares),
+    });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [members, categories, expense]);
 
   const watchAmount = form.watch("amount");
   const watchSplitType = form.watch("splitType");
 
   useEffect(() => {
-    if (watchSplitType === "even" && watchAmount) {
-      const shareAmount = Number(watchAmount) / members.length;
-      const shares = members.reduce(
-        (acc, member) => ({ ...acc, [member]: shareAmount }),
+    if (watchSplitType === "even" && watchAmount && memberIds.length > 0) {
+      const shareAmount = Number(watchAmount) / memberIds.length;
+      const shares = memberIds.reduce(
+        (acc, id) => ({ ...acc, [id]: shareAmount }),
         {}
       );
       form.setValue("shares", shares);
     }
-  }, [watchAmount, watchSplitType, members, form]);
+  }, [watchAmount, watchSplitType, memberIds, form]);
 
   const handleSubmit = (data: any) => {
     const totalPaid = Object.values(data.payers).reduce(
@@ -138,6 +166,17 @@ export function ExpenseEditForm({
     onSubmit(formattedData);
   };
 
+  // 等待所有資料都到齊才渲染表單
+  if (isMembersLoading || isCategoriesLoading) {
+    return <div>資料載入中...</div>;
+  }
+  if (memberError) {
+    return <div className="text-red-500">成員載入失敗：{memberError}</div>;
+  }
+  if (categoriesError) {
+    return <div className="text-red-500">類別載入失敗：{categoriesError}</div>;
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -167,6 +206,7 @@ export function ExpenseEditForm({
                   step="0.01"
                   placeholder="輸入總額"
                   {...field}
+                  value={field.value ?? 0}
                 />
               </FormControl>
               <FormMessage />
@@ -178,11 +218,11 @@ export function ExpenseEditForm({
           <Label className="text-[#263238] text-sm font-medium">付款人</Label>
           <div className="space-y-2 mt-1">
             {members.map((member) => (
-              <div key={member} className="flex items-center space-x-2">
-                <span className="w-20 text-[#263238]">{member}</span>
+              <div key={member.id} className="flex items-center space-x-2">
+                <span className="w-20 text-[#263238]">{member.name}</span>
                 <FormField
                   control={form.control}
-                  name={`payers.${member}`}
+                  name={`payers.${member.id}`}
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
@@ -190,6 +230,7 @@ export function ExpenseEditForm({
                           type="number"
                           className="w-32 h-8 border-[#D1D5DB] rounded-md bg-white"
                           {...field}
+                          value={field.value ?? 0}
                         />
                       </FormControl>
                       <FormMessage />
@@ -244,11 +285,11 @@ export function ExpenseEditForm({
             </Label>
             <div className="space-y-2 mt-1">
               {members.map((member) => (
-                <div key={member} className="flex items-center space-x-2">
-                  <span className="w-20 text-[#263238]">{member}</span>
+                <div key={member.id} className="flex items-center space-x-2">
+                  <span className="w-20 text-[#263238]">{member.name}</span>
                   <FormField
                     control={form.control}
-                    name={`shares.${member}`}
+                    name={`shares.${member.id}`}
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
@@ -256,6 +297,7 @@ export function ExpenseEditForm({
                             type="number"
                             className="w-32 h-8 border-[#D1D5DB] rounded-md"
                             {...field}
+                            value={field.value ?? 0}
                           />
                         </FormControl>
                         <FormMessage />
@@ -268,26 +310,27 @@ export function ExpenseEditForm({
           </div>
         )}
 
+        {/* 類別選擇欄位 */}
         <FormField
           control={form.control}
           name="category"
           render={({ field }) => (
-            <FormItem className="w-32">
-              <FormLabel>類別（選填）</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl className="w-full">
+            <FormItem>
+              <FormLabel>類別</FormLabel>
+              <FormControl>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger>
-                    <SelectValue placeholder="選擇類別" />
+                    <SelectValue placeholder="請選擇類別" />
                   </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="餐費">餐飲</SelectItem>
-                  <SelectItem value="交通">交通</SelectItem>
-                  <SelectItem value="住宿">住宿</SelectItem>
-                  <SelectItem value="購物">購物</SelectItem>
-                  <SelectItem value="其他">其他</SelectItem>
-                </SelectContent>
-              </Select>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

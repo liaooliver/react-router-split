@@ -17,7 +17,6 @@ interface EventListProps {
 
 const EventList = ({ events }: EventListProps) => {
   const getStatusInfo = (status: EventStatus) => {
-    console.log("status", status);
     switch (status) {
       case "active":
         return {
@@ -87,10 +86,7 @@ const EventList = ({ events }: EventListProps) => {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <div className="w-full flex justify-between items-center">
-                    <span className="text-sm text-gray-500">
-                      {statusInfo.desc}
-                    </span>
+                  <div className="w-full flex items-center">
                     <span
                       className={`text-sm font-medium px-2 py-0.5 rounded-full ${statusInfo.bgColor}`}
                     >
