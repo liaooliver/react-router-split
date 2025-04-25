@@ -1,10 +1,10 @@
 const getApiBaseUrl = () => {
   const env = process.env.NODE_ENV || "development";
-
+  console.log(process.env.NODE_ENV);
+  console.log(import.meta.env.VITE_API_BASE_URL);
   switch (env) {
     case "production":
-      return process.env.API_BASE_URL;
-    case "development":
+      return import.meta.env.VITE_API_BASE_URL;
     default:
       return "http://localhost:3000/api";
   }

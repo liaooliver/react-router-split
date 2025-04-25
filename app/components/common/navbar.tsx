@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/Avatar";
 import CoinIcon from "~/assets/icons/coin-icon";
 import { useAuth } from "~/contexts/AuthContext";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 
 const Navbar = ({ iconType = "coin" }) => {
   const { currentUser, logOut } = useAuth();

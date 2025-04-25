@@ -1,22 +1,20 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
+# ----------- Build Stage -----------
+FROM node:20-alpine AS builder
 WORKDIR /app
+COPY package.json package-lock.json ./
 RUN npm ci
-
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
-WORKDIR /app
-RUN npm ci --omit=dev
-
-FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
+COPY . .
 RUN npm run build
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
+# ----------- Production Stage -----------
+FROM node:20-alpine AS production
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/public ./public
+# 如果有 server 端 index.js 也一併複製
+COPY --from=builder /app/build/server ./build/server
+
+EXPOSE 3000
 CMD ["npm", "run", "start"]

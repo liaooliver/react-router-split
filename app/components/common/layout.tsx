@@ -1,6 +1,6 @@
 import { Outlet, useNavigate } from "react-router";
 import { appDesignTokens } from "~/assets/style/tokens";
-import Navbar from "./navbar";
+import Navbar from "./Navbar";
 import { useAuth } from "~/contexts/AuthContext";
 import { useEffect } from "react";
 
@@ -14,9 +14,21 @@ const GradientBackground = () => (
     >
       {/* 銀河中心星雲暈染 */}
       <radialGradient id="galaxy-core" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor={appDesignTokens.primary} stopOpacity="0.5" />
-        <stop offset="60%" stopColor={appDesignTokens.accent} stopOpacity="0.2" />
-        <stop offset="100%" stopColor={appDesignTokens.secondary} stopOpacity="0" />
+        <stop
+          offset="0%"
+          stopColor={appDesignTokens.primary}
+          stopOpacity="0.5"
+        />
+        <stop
+          offset="60%"
+          stopColor={appDesignTokens.accent}
+          stopOpacity="0.2"
+        />
+        <stop
+          offset="100%"
+          stopColor={appDesignTokens.secondary}
+          stopOpacity="0"
+        />
       </radialGradient>
       <ellipse cx="50" cy="50" rx="18" ry="10" fill="url(#galaxy-core)" />
       {/* 中心黑洞 */}
@@ -24,12 +36,42 @@ const GradientBackground = () => (
 
       {/* 螺旋臂（以多條半透明曲線表現） */}
       <g opacity="0.5">
-        <path d="M50,50 Q70,40 90,60" stroke={appDesignTokens.accent} strokeWidth="1.2" fill="none" />
-        <path d="M50,50 Q30,60 10,40" stroke={appDesignTokens.secondary} strokeWidth="1.2" fill="none" />
-        <path d="M50,50 Q80,20 95,35" stroke={appDesignTokens.primary} strokeWidth="0.7" fill="none" />
-        <path d="M50,50 Q20,20 5,65" stroke={appDesignTokens.accent} strokeWidth="0.7" fill="none" />
-        <path d="M50,50 Q80,80 95,65" stroke={appDesignTokens.secondary} strokeWidth="0.6" fill="none" />
-        <path d="M50,50 Q20,80 5,35" stroke={appDesignTokens.primary} strokeWidth="0.6" fill="none" />
+        <path
+          d="M50,50 Q70,40 90,60"
+          stroke={appDesignTokens.accent}
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <path
+          d="M50,50 Q30,60 10,40"
+          stroke={appDesignTokens.secondary}
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <path
+          d="M50,50 Q80,20 95,35"
+          stroke={appDesignTokens.primary}
+          strokeWidth="0.7"
+          fill="none"
+        />
+        <path
+          d="M50,50 Q20,20 5,65"
+          stroke={appDesignTokens.accent}
+          strokeWidth="0.7"
+          fill="none"
+        />
+        <path
+          d="M50,50 Q80,80 95,65"
+          stroke={appDesignTokens.secondary}
+          strokeWidth="0.6"
+          fill="none"
+        />
+        <path
+          d="M50,50 Q20,80 5,35"
+          stroke={appDesignTokens.primary}
+          strokeWidth="0.6"
+          fill="none"
+        />
       </g>
 
       {/* 星點（隨機分布，大小、顏色不一，模擬銀河星海） */}
@@ -53,9 +95,30 @@ const GradientBackground = () => (
         <circle cx="50" cy="15" r="0.3" fill={appDesignTokens.accent} />
       </g>
       {/* 星雲暈染（淡色橢圓） */}
-      <ellipse cx="70" cy="30" rx="6" ry="2.5" fill={appDesignTokens.accent} opacity="0.09" />
-      <ellipse cx="30" cy="70" rx="7" ry="3" fill={appDesignTokens.secondary} opacity="0.07" />
-      <ellipse cx="80" cy="80" rx="10" ry="4" fill={appDesignTokens.primary} opacity="0.05" />
+      <ellipse
+        cx="70"
+        cy="30"
+        rx="6"
+        ry="2.5"
+        fill={appDesignTokens.accent}
+        opacity="0.09"
+      />
+      <ellipse
+        cx="30"
+        cy="70"
+        rx="7"
+        ry="3"
+        fill={appDesignTokens.secondary}
+        opacity="0.07"
+      />
+      <ellipse
+        cx="80"
+        cy="80"
+        rx="10"
+        ry="4"
+        fill={appDesignTokens.primary}
+        opacity="0.05"
+      />
     </svg>
   </div>
 );
