@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import { fetchProtectedExpenseDetail } from "~/services/fetchExpenseDetail";
-import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
+import { Button } from "~/components/ui/Button";
+import { Dialog, DialogContent, DialogTitle } from "~/components/ui/Dialog";
 import { PageHeader } from "~/components/common/PageHeader";
 import { AnimatedPageContainer } from "~/components/common/AnimatedPageContainer";
 import { ExpenseDetailCard } from "~/components/feature/ExpenseDetailCard";

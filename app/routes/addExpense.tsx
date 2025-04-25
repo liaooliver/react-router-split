@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/addExpense";
-import { Input } from "~/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
-import { Label } from "~/components/ui/label";
+import { Input } from "~/components/ui/Input";
+import { RadioGroup, RadioGroupItem } from "~/components/ui/RadioGroup";
+import { Label } from "~/components/ui/Label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "~/components/ui/select";
-import { Button } from "~/components/ui/button";
+} from "~/components/ui/Select";
+import { Button } from "~/components/ui/Button";
 import { PageHeader } from "~/components/common/PageHeader";
 import { AnimatedPageContainer } from "~/components/common/AnimatedPageContainer";
 

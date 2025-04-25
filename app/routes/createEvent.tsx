@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/Button";
+import { Input } from "~/components/ui/Input";
 import { fetchProtectedCreateEvent } from "~/services/fetchProtectedData";
 
 const CreateEvent = () => {

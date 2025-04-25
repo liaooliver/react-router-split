@@ -1,6 +1,6 @@
 // src/components/common/Navbar.js
 import { NavLink, useNavigate } from "react-router";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/Avatar";
 import CoinIcon from "~/assets/icons/coin-icon";
 import { useAuth } from "~/contexts/AuthContext";
 import { Button } from "../ui/button";

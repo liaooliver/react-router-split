@@ -1,12 +1,12 @@
 import { Pencil, Trash2 } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/Button";
 import {
   AlertDialog,
   AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogFooter,
-} from "~/components/ui/alert-dialog";
+} from "~/components/ui/AlertDialog";
 import { useState } from "react";
 
 interface ExpenseActionButtonsProps {

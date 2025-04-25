@@ -9,18 +9,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
+} from "~/components/ui/Form";
+import { Input } from "~/components/ui/Input";
+import { Button } from "~/components/ui/Button";
+import { Label } from "~/components/ui/Label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "~/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
+} from "~/components/ui/Select";
+import { RadioGroup, RadioGroupItem } from "~/components/ui/RadioGroup";
 import { type Expense, type ExpenseFormData } from "~/types/expense";
 import { useEventMembers, type EventMember } from "~/hooks/useEventMembers";
 import { useCategories } from "~/hooks/useCategories";

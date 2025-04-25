@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { fetchProtectedDashboardData } from "~/services/fetchProtectedData";
 import type { DashboardDataInterface } from "~/types/dashboard";
 import type { Route } from "./+types/home";
-import { Card, CardContent } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/Card";
+import { Button } from "~/components/ui/Button";
 import { Plus } from "lucide-react";
-import DebtOverview from "~/components/feature/debtOverview";
-import EventList from "~/components/feature/eventList";
+import DebtOverview from "~/components/feature/DebtOverview";
+import EventList from "~/components/feature/EventList";
 import { Link } from "react-router";
 import { useAuth } from "~/contexts/AuthContext";
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/home";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/Button";
 import { GoogleIcon } from "~/assets/icons/google-icon";
 import { useNavigate } from "react-router";
 import { useAuth } from "~/contexts/AuthContext";

@@ -1,7 +1,7 @@
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "../components/ui/dialog";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "../components/ui/Dialog";
+import { Input } from "../components/ui/Input";
+import { Button } from "../components/ui/Button";
 import { AlertTriangle } from "lucide-react";
 
 interface AddMemberDialogProps {

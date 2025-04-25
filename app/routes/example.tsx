@@ -2,14 +2,14 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/Button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "~/components/ui/dialog";
+} from "~/components/ui/Dialog";
 import {
   Form,
   FormControl,
@@ -17,10 +17,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { Switch } from "~/components/ui/switch";
+} from "~/components/ui/Form";
+import { Input } from "~/components/ui/Input";
+import { Label } from "~/components/ui/Label";
+import { Switch } from "~/components/ui/Switch";
 
 // 表單驗證 Schema
 const formSchema = z.object({

@@ -1,4 +1,4 @@
-import { Card, CardContent } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/Card";
 import { CheckCircle2 } from "lucide-react";
 import { type Expense } from "~/types/expense";
 

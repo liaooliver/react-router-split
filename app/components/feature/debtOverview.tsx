@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "~/lib/axios";
 import { auth } from "~/lib/firebase";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "~/components/ui/dialog";
+} from "~/components/ui/Dialog";
 import type { DebtInterface } from "~/types/eventDashboard";
 
 interface DebtOverviewProps {

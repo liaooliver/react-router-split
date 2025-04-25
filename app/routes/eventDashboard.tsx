@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { fetchProtectedEventDetail } from "~/services/fetchProtectedEventDetail";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent } from "~/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/Button";
+import { Card, CardContent } from "~/components/ui/Card";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/Avatar";
 import { Pencil, Trash2, X, Plus, AlertTriangle } from "lucide-react";
 import { Link } from "react-router";
 import {
@@ -12,8 +12,8 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
-} from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
+} from "~/components/ui/Dialog";
+import { Input } from "~/components/ui/Input";
 import { PageHeader } from "~/components/common/PageHeader";
 import { AnimatedPageContainer } from "~/components/common/AnimatedPageContainer";
 import {
@@ -26,12 +26,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "~/components/ui/alert-dialog";
+} from "~/components/ui/AlertDialog";
 import DonutChart from "~/components/feature/DonutChart";
 import LoadingSpinner from "~/components/common/LoadingSpinner";
 import axiosInstance from "~/lib/axios";
 import { auth } from "~/lib/firebase";
-import DebtOverview from "~/components/feature/debtOverview";
+import DebtOverview from "~/components/feature/DebtOverview";
 import type { Route } from "../+types/root";
 import { isDuplicateMemberName } from "../utils/member";
 import {

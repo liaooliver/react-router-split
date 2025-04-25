@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "~/components/ui/card";
+} from "~/components/ui/Card";
 import { CalendarIcon } from "lucide-react";
 import type { EventStatus } from "~/constants/status";
 import type { EventInterface } from "~/types/dashboard";
