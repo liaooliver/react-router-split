@@ -3,9 +3,7 @@ const getApiBaseUrl = () => {
 
   switch (env) {
     case "production":
-      return "https://api.yourproduction.com";
-    case "test":
-      return "https://api.yourtest.com";
+      return process.env.API_BASE_URL;
     case "development":
     default:
       return "http://localhost:3000/api";
