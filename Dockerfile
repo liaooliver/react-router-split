@@ -2,7 +2,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json ./
-RUN npm ci
+RUN npm install
 COPY . .
 RUN npm run build
 
@@ -10,7 +10,7 @@ RUN npm run build
 FROM node:20-alpine AS production
 WORKDIR /app
 COPY package.json ./
-RUN npm ci --omit=dev
+RUN npm install
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/public ./public
 # 如果有 server 端 index.js 也一併複製
