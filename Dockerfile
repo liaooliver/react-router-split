@@ -1,20 +1,9 @@
-# ----------- Build Stage -----------
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 WORKDIR /app
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
 RUN npm run build
 
-# ----------- Production Stage -----------
-FROM node:20-alpine AS production
-WORKDIR /app
-COPY package.json ./
-RUN npm install
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/public ./public
-# 如果有 server 端 index.js 也一併複製
-COPY --from=builder /app/build/server ./build/server
-
-EXPOSE 3000
+# 你可以根據實際情況修改啟動指令（以下以 serve 為例）
 CMD ["npm", "run", "start"]
