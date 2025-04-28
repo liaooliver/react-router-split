@@ -1,7 +1,6 @@
 const getApiBaseUrl = () => {
-  const env = process.env.NODE_ENV || "development";
-  console.log(process.env.NODE_ENV);
-  console.log(import.meta.env.VITE_API_BASE_URL);
+  const env = import.meta.env.VITE_NODE_ENV || "development";
+
   switch (env) {
     case "production":
       return import.meta.env.VITE_API_BASE_URL;

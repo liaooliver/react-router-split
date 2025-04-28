@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_CONFIG } from "~/config/api";
-console.log(API_CONFIG);
+
 // 建立共用的 axios 實例
 const axiosInstance = axios.create(API_CONFIG);
 
