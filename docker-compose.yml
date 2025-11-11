@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Development service with hot reload
+  dev:
+    build:
+      context: .
+      dockerfile: dockerfile
+      target: builder
+    container_name: react-router-split-dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    networks:
+      - app-network
+
+  # Production service
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: react-router-split-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  app-network:
+    driver: bridge
+
+# Usage:
+# Development mode: docker-compose up dev
+# Production mode:  docker-compose up app
+# Both modes:       docker-compose up

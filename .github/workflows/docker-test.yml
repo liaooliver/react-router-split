@@ -1,0 +1,136 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'dockerfile'
+      - '.dockerignore'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/docker-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'dockerfile'
+      - '.dockerignore'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+jobs:
+  docker-build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        install: true
+    
+    - name: Build Docker image
+      run: |
+        docker build \
+          --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+          --build-arg VERSION=${{ github.ref_name }} \
+          --build-arg VCS_REF=${{ github.sha }} \
+          --tag react-router-split:${{ github.sha }} \
+          --tag react-router-split:test \
+          .
+    
+    - name: Test Docker image build
+      run: |
+        echo "Checking if image was built..."
+        docker images react-router-split:test
+    
+    - name: Inspect image
+      run: |
+        echo "Image details:"
+        docker inspect react-router-split:test
+        echo ""
+        echo "Image size:"
+        docker images react-router-split:test --format "{{.Repository}}:{{.Tag}} - {{.Size}}"
+        echo ""
+        echo "Image layers:"
+        docker history react-router-split:test
+    
+    - name: Start container
+      run: |
+        docker run -d \
+          --name test-container \
+          --port 3000:3000 \
+          react-router-split:test
+        
+        echo "Waiting for container to start..."
+        sleep 15
+        
+        echo "Container status:"
+        docker ps -a | grep test-container
+    
+    - name: Check container logs
+      if: always()
+      run: |
+        echo "Container logs:"
+        docker logs test-container
+    
+    - name: Test application response
+      run: |
+        echo "Testing application endpoint..."
+        MAX_ATTEMPTS=10
+        ATTEMPT=1
+        
+        while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+          echo "Attempt $ATTEMPT of $MAX_ATTEMPTS"
+          
+          if curl -f -s -o /dev/null -w "%{http_code}" http://localhost:3000 | grep -q "200\|301\|302"; then
+            echo "Application is responding!"
+            curl -I http://localhost:3000
+            exit 0
+          fi
+          
+          echo "Waiting for application to be ready..."
+          sleep 5
+          ATTEMPT=$((ATTEMPT + 1))
+        done
+        
+        echo "Application did not respond within timeout"
+        docker logs test-container
+        exit 1
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'react-router-split:test'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Upload Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Run Trivy vulnerability scanner (table output)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'react-router-split:test'
+        format: 'table'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Cleanup
+      if: always()
+      run: |
+        docker stop test-container || true
+        docker rm test-container || true
+    
+    - name: Summary
+      if: success()
+      run: |
+        echo "✅ Docker build and test completed successfully!"
+        echo ""
+        echo "Image: react-router-split:${{ github.sha }}"
+        echo "Size: $(docker images react-router-split:test --format '{{.Size}}')"
