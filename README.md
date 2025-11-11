@@ -49,11 +49,27 @@ npm run build
 To build and run using Docker:
 
 ```bash
+# Build the image
 docker build -t my-app .
 
 # Run the container
 docker run -p 3000:3000 my-app
 ```
+
+For development with Docker Compose:
+
+```bash
+# Development mode with hot reload
+docker-compose up dev
+
+# Production mode
+docker-compose up app
+```
+
+**📚 Docker Resources:**
+- [Dockerfile Review & Best Practices](./DOCKERFILE_REVIEW.md) - Comprehensive Dockerfile analysis and recommendations
+- [Docker Testing Guide](./tests/DOCKER_TESTING.md) - Testing procedures and CI/CD integration
+- Run automated tests: `./tests/docker-test.sh`
 
 The containerized application can be deployed to any platform that supports Docker, including:
 
